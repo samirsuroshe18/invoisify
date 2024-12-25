@@ -3,6 +3,6 @@ import {check} from "../controllers/user.controller.js";
 
 const router = Router();
 
-router.route('check').get(check);
+router.route('/check').get(check);
 
 export default router;

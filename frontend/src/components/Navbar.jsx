@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import logo from "../assets/receipt.png";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -49,9 +50,12 @@ const Navbar = () => {
           <li className="py-2 lg:py-0">
             <span className="cursor-pointer hover:text-gray-400">Help</span>
           </li>
+          <Link to="/login">
           <li className="py-2 lg:py-0">
             <span className="cursor-pointer hover:text-gray-400">Login</span>
           </li>
+          </Link>
+          
         </ul>
       </div>
     </div>

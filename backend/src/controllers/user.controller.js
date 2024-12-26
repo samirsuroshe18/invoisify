@@ -1,5 +1,5 @@
 import asyncHandler from '../utils/asynchandler.js';
-import ApiError from '../utils/apiError.js';
+import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { User } from '../models/user.model.js';
 import mailSender from '../utils/mailSender.js';
@@ -97,7 +97,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     return res.status(200).cookie('accessToken', accessToken, option).cookie('refreshToken', refreshToken, option).json(
-        new ApiResponse(200, { loggedInUser, accessToken, refreshToken }, "User logged in sucessully")
+        new ApiResponse(200, { user, accessToken, refreshToken }, "User logged in sucessully")
     );
 });
 

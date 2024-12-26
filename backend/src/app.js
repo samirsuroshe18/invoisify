@@ -24,10 +24,12 @@ app.use(cookieParser());
 //routes import
 import userRouter from "./routes/user.route.js";
 import oauthRouter from "./routes/oauth.routes.js";
+import emailRouter from "./routes/email.routes.js";
 
 //routes declaration
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/oauth", oauthRouter);
+app.use("/api/v1/email", emailRouter);
 
 app.use(errorHandler);
 

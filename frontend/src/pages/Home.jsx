@@ -134,13 +134,15 @@ const Home = () => {
           Join thousands of professionals using Invoisify to streamline their
           invoicing process.
         </p>
-        <button
-          className="px-8 py-3 bg-gray-800 rounded hover:bg-gray-700 text-white text-xl"
-          data-aos="zoom-in"
-          data-aos-delay="400"
-        >
-          Sign Up for Free
-        </button>
+        <Link to="/register">
+          <button
+            className="px-8 py-3 bg-gray-800 rounded hover:bg-gray-700 text-white text-xl"
+            data-aos="zoom-in"
+            data-aos-delay="400"
+          >
+            Sign Up for Free
+          </button>
+        </Link>
       </section>
 
 

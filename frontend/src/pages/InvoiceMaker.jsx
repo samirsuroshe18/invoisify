@@ -128,6 +128,7 @@ const InvoiceMaker = () => {
                         required
                     />
                 </div>
+                
                 <button type="submit" className='m-2 p-2 bg-blue-600'>Create Invoice</button>
             </form>
         </div>

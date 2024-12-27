@@ -1,5 +1,5 @@
 import asyncHandler from '../utils/asynchandler.js';
-import ApiError from '../utils/apiError.js';
+import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { User } from '../models/user.model.js';
 
@@ -29,11 +29,11 @@ const googleLogin = asyncHandler(async (req, res) => {
 
     const existedUser = await User.findOne({ email });
 
-    if (existedUser && existedUser.isGoogleVerified === false) {
+    if (existedUser && existedUser?.isGoogleVerified === false) {
         throw new ApiError(409, 'An account with this email already exists.');
     }
 
-    if (!existedUser && existedUser.isGoogleVerified === false) {
+    if (!existedUser) {
         const loggedInUser = await User.create({
             name,
             email,

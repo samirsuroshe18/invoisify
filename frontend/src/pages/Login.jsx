@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { Button, Form, Card } from 'react-bootstrap';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -8,12 +8,40 @@ import {jwtDecode} from 'jwt-decode';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState();
+  const [password, setPassword] = useState()
   
   const handleSubmit = (e) => {
     e.preventDefault();
     
     console.log('Form submitted');
   };
+
+  const loginUser = async (e)=>{
+    e.preventDefault();
+
+    if(!email || !password){
+        alert("all fields are required");
+        return;
+    }
+
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_BASE_URL}/api/v1/user/login`,
+            {
+                email: email,
+                password: password
+            },
+            {
+                withCredentials: true
+            }
+        );
+        alert(response.data.message);
+        navigate("/")
+    } catch (error) {
+        alert(error.response?.data.message || error.message);
+    }
+};
 
   const googleLogin = async (token) => {
 
@@ -37,7 +65,6 @@ const Login = () => {
   };
 
   const handleSuccess = (response) => {
-    // Extract the token from the response
     const token = response.credential;
     const decoded = jwtDecode(token);
     googleLogin(decoded);
@@ -52,15 +79,15 @@ const Login = () => {
       <Card style={{ width: '400px' }} className="p-4 shadow-lg">
         <h3 className="text-center mb-4">Login</h3>
         
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={loginUser}>
           <Form.Group controlId="formBasicEmail">
             <Form.Label>Email address</Form.Label>
-            <Form.Control type="email" placeholder="Enter email" required />
+            <Form.Control type="email" placeholder="Enter email" required onChange={(e)=>setEmail(e.target.value)}/>
           </Form.Group>
 
           <Form.Group controlId="formBasicPassword">
             <Form.Label>Password</Form.Label>
-            <Form.Control type="password" placeholder="Password" required />
+            <Form.Control type="password" placeholder="Password" required onChange={(e)=>setPassword(e.target.value)}/>
           </Form.Group>
 
           <Button variant="primary" type="submit" className="w-100 mt-3">
@@ -79,6 +106,10 @@ const Login = () => {
       onSuccess={handleSuccess}
       onError={handleError}/>
     </GoogleOAuthProvider>
+        </div>
+
+        <div className="text-center mt-2">
+          <span> <Link to="/forgot-password">Forgot Password?</Link></span>
         </div>
 
         <div className="text-center mt-3">

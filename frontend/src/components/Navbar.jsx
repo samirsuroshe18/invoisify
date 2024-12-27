@@ -44,9 +44,11 @@ const Navbar = () => {
           <li className="py-2 lg:py-0">
             <span className="cursor-pointer hover:text-gray-400">Home</span>
           </li>
-          <li className="py-2 lg:py-0">
-            <span className="cursor-pointer hover:text-gray-400">Invoices</span>
-          </li>
+          <Link to="/invoices">
+            <li className="py-2 lg:py-0">
+              <span className="cursor-pointer hover:text-gray-400">Invoices</span>
+            </li>
+          </Link>
           <li className="py-2 lg:py-0">
             <span className="cursor-pointer hover:text-gray-400">Help</span>
           </li>

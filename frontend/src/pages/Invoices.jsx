@@ -30,7 +30,7 @@ const Invoices = () => {
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">My Invoices</h2>
-          <Link to="/design-invoice">
+          <Link to="/">
             <button className="px-6 py-3 bg-blue-600 rounded hover:bg-blue-700 text-white transition duration-200">
               Design New
             </button>

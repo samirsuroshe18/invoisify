@@ -10,7 +10,7 @@ import {
   import Login from "../pages/Login.jsx";
   import Invoices from "../pages/Invoices.jsx"
 import Register from "../pages/Register.jsx";
-import InvoiceDesigner from "../components/InvoiceDesigner.jsx";
+import InvoiceMaker from "../pages/InvoiceMaker.jsx";
   
   const router = createBrowserRouter(
     createRoutesFromElements(
@@ -22,8 +22,9 @@ import InvoiceDesigner from "../components/InvoiceDesigner.jsx";
         <Route path="/register" element={<Register />} />
         <Route path="/invoices" element={<Invoices/>} />
         <Route path="/forgot-password" element={<ForgotPassword/>} />
-        <Route path="/invoice-designer" element={<InvoiceDesigner/>} />
+        
         <Route path="*" element={<NotFound />} />
+        <Route path="/invoice-maker" element={<InvoiceMaker />} />
       </>
     )
   );

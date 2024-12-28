@@ -7,7 +7,7 @@ const Invoices = ({ onSelectTemplate }) => {
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const response = await axios.get("/api/templates");
+        const response = await axios.get(`${import.meta.url.VITE_BASE_URL}/api/v1/template/get-invoice`);
         setTemplates(response.data);
       } catch (error) {
         console.error("Error fetching templates:", error);

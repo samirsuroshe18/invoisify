@@ -23,7 +23,7 @@ const HeroSection = () => {
 
   return (
     <section className="relative w-full h-screen">
-      <div className="flex items-center justify-between h-full px-8 lg:px-16 py-16 max-w-screen-xl mx-auto">
+      <div className="flex items-center h-full px-8 lg:px-16 py-16 max-w-screen-xl mx-auto">
         
         <div className="w-full lg:w-1/2 text-center lg:text-left">
           <animated.div style={props} data-aos="fade-up" className="space-y-6">
@@ -39,8 +39,8 @@ const HeroSection = () => {
               offset={-70}
               duration={500}
               className="inline-block px-6 py-3 mt-4 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300 no-underline"
-            >
-              Explore Features
+            ><button>
+              Explore Features</button>
             </Link>
           </animated.div>
         </div>

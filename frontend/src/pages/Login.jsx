@@ -7,18 +7,20 @@ import axios from 'axios';
 import {jwtDecode} from 'jwt-decode';
 import { useDispatch } from 'react-redux';
 import { login } from '../redux/slices/authSlice';
+import { useAlert } from '../hooks/useAlert';
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState();
-  const [password, setPassword] = useState()
+  const [password, setPassword] = useState();
+  const [AlertComponent, showAlert] = useAlert();
   const dispatch = useDispatch();
 
   const loginUser = async (e)=>{
     e.preventDefault();
 
     if(!email || !password){
-      alert("all fields are required");
+      showAlert("all fields are required",'info');
       return;
     }
 

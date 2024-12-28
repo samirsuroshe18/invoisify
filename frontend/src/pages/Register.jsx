@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { useDispatch } from 'react-redux';
+import { useAlert } from '../hooks/useAlert';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -13,17 +14,18 @@ const Register = () => {
     const [password, setPassword] = useState()
     const [confirmPassword, setConfirmPassword] = useState();
     const [name ,setName] = useState();
+    const [AlertComponent, showAlert] = useAlert();
     const dispatch = useDispatch();
 
     const registerUser = async (e)=>{
         e.preventDefault();
 
         if(password !== confirmPassword){
-            alert('Password does not match');
+            showAlert('Passwords do not match', 'warning');
             return;
         }
         if(!email || !name || !password){
-            alert("all fields are required");
+            showAlert('Please fill all the fields', 'error');
             return;
         }
 
@@ -81,6 +83,7 @@ const Register = () => {
 
     return (
         <div className='bg-gray-900'>
+            <AlertComponent />
             <div className="d-flex justify-content-center bg-gray-800 align-items-center min-vh-100 bg-light gap-2">
                 <Card style={{ width: '400px' }} className="p-4 shadow-lg py-4">
                     <h3 className="text-center mb-4">Create an Account</h3>
@@ -88,25 +91,25 @@ const Register = () => {
                     <Form onSubmit={registerUser}>
                         <Form.Group controlId="formBasicEmail">
                             <Form.Label>Email address</Form.Label>
-                            <Form.Control type="email" onChange={(e)=>setEmail(e.target.value)} placeholder="Enter email" required />
+                            <Form.Control type="email" onChange={(e)=>setEmail(e.target.value)} placeholder="Enter email"  />
                         </Form.Group>
 
                         
                         <Form.Group controlId="formBasicName">
                             <Form.Label>Name</Form.Label>
-                            <Form.Control type="text" onChange={(e)=>setName(e.target.value)} placeholder="Enter Name" required />
+                            <Form.Control type="text" onChange={(e)=>setName(e.target.value)} placeholder="Enter Name"  />
                         </Form.Group>
 
                         <Form.Group controlId="formBasicPassword">
                             <Form.Label>Password</Form.Label>
-                            <Form.Control type="password" placeholder="Password" required
+                            <Form.Control type="password" placeholder="Password" 
                             onChange={(e)=>setPassword(e.target.value)}
                             />
                         </Form.Group>
 
                         <Form.Group controlId="formConfirmPassword">
                             <Form.Label>Confirm Password</Form.Label>
-                            <Form.Control type="password" placeholder="Re-enter your password" required onChange={(e)=>setConfirmPassword(e.target.value)} />
+                            <Form.Control type="password" placeholder="Re-enter your password"  onChange={(e)=>setConfirmPassword(e.target.value)} />
                         </Form.Group>
 
                         <Button variant="primary" type="submit" className="w-100 mt-3">

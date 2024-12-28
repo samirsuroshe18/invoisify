@@ -27,7 +27,7 @@ const Navbar = ({ activePage }) => {
     { name: 'Home', href: '/' },
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Invoices', href: '/invoice-preview' },
-    { name: 'Contact', href: '/contact' },
+    { name: 'Reviews', href: '/review' },
   ];
 
   return (
@@ -136,7 +136,7 @@ const Navbar = ({ activePage }) => {
             <li className="px-4 py-2 no-underline">
             <Link to="/register">
               <button
-                className="block w-full text-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow hover:bg-blue-600 transition"
+                className="block w-full text-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow hover:bg-blue-600 no-underline transition"
                 onClick={logoutUser}
               >
                 Logout

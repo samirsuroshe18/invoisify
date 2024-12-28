@@ -12,23 +12,26 @@ import Invoices from "../pages/Invoices.jsx"
 import Register from "../pages/Register.jsx";
 import InvoiceMaker from "../pages/InvoiceMaker.jsx";
 import InvoicePreview from "../pages/InvoicePreview.jsx";
-
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <>
-      <Route path="/" element={<App />}>
-        <Route path="/home" element={<Home />} />
-      </Route>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/invoices" element={<Invoices />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-
-      <Route path="*" element={<NotFound />} />
-      <Route path="/invoice-maker" element={<InvoiceMaker />} />
-      <Route path="/invoice-preview" element={<InvoicePreview />} />
-    </>
-  )
-);
-
-export default router;
+import Dashboard from "../pages/Dashboard.jsx";
+  
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <>
+        <Route path="/" element={<App />}>
+          <Route path="/home" element={<Home />} />
+        </Route>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/invoices" element={<Invoices/>} />
+        <Route path="/forgot-password" element={<ForgotPassword/>} />
+        
+        <Route path="*" element={<NotFound />} />
+        <Route path="/invoice-maker" element={<InvoiceMaker />} />
+        <Route path="/invoice-preview" element={<InvoicePreview />} />
+        <Route path="/Dashboard" element={<Dashboard />} />
+      </>
+    )
+  );
+  
+  export default router;
+  

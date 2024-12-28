@@ -9,32 +9,32 @@ function App() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    axios
-      .get(
-        `${import.meta.env.VITE_BASE_URL}/api/v1/user/get-current-user`,
-        {
-          withCredentials: true,
-        }
-      )
-      .then((response) => {
-        alert(response.data.message);
-        setIsLoggedIn(true);
-      })
-      .catch((error) => {
-        console.log(error);
-        alert(error?.response?.data.message || error.message);
-        setIsLoggedIn(false);
-        navigate("/login");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+  // useEffect(() => {
+  //   axios
+  //     .get(
+  //       `${import.meta.env.VITE_BASE_URL}/api/v1/user/get-current-user`,
+  //       {
+  //         withCredentials: true,
+  //       }
+  //     )
+  //     .then((response) => {
+  //       alert(response.data.message);
+  //       setIsLoggedIn(true);
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //       alert(error?.response?.data.message || error.message);
+  //       setIsLoggedIn(false);
+  //       navigate("/login");
+  //     })
+  //     .finally(() => {
+  //       setLoading(false);
+  //     });
+  // }, []);
 
   return (
     <>
-      {/* <Home/> */}
+      <Home/>
       
     </>
   )

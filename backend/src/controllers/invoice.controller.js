@@ -62,4 +62,4 @@ const createInvoice = asyncHandler(async (req, res) => {
 
 });
 
-export { createInvoice, createTemplate, g };
+export { createInvoice};

@@ -1,39 +1,35 @@
 import React, { useState, useRef } from "react";
 import html2pdf from "html2pdf.js";
 import logo from "../assets/invoisify.png";
+import Navbar from "../components/Navbar";
 
 const InvoicePreview = () => {
     const componentRef = useRef();
 
-    // Function to generate and save PDF
+    
+
+    const [formData, setFormData] = useState({
+        companyName: "",
+        address: "",
+        email: "",
+        customerName: "",
+        customerAddress: "",
+        notes: "Thank you for your business!",
+        items: [
+            { description: "", quantity: 0, rate: 0 },
+            { description: "", quantity: 0, rate: 0 },
+        ],
+    });
+
     const generateAndSavePDF = () => {
         const options = {
-            filename: "invoice.pdf",
+            filename: `${formData.customerName}_invoice.pdf`,
             html2canvas: { scale: 2 },
             jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
         };
 
-        html2pdf()
-            .from(componentRef.current)
-            .set(options)
-            .save();
+        html2pdf().from(componentRef.current).set(options).save();
     };
-
-    const [formData, setFormData] = useState({
-        companyName: "Tricodes ",
-        address: "7A, 2nd Floor, 80 Feet Road, Koramangala 4th Block, Bangalore",
-        email: "tricodes7@gmail.com",
-        customerName: "Customer Name",
-        customerAddress: "Customer Address",
-        invoiceNumber: "INV-0001",
-        invoiceDate: "2024-12-27",
-        dueDate: "2025-01-05",
-        notes: "Thank you for your business!",
-        items: [
-            { description: "Service/Product 1", quantity: 1, rate: 100 },
-            { description: "Service/Product 2", quantity: 2, rate: 150 },
-        ],
-    });
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -45,7 +41,17 @@ const InvoicePreview = () => {
         updatedItems[index][field] = value;
         setFormData({ ...formData, items: updatedItems });
     };
-    
+
+    const clearAllItems = () => {
+        setFormData({ ...formData, items: [] });
+    };
+
+    const addNewItem = () => {
+        setFormData({
+            ...formData,
+            items: [...formData.items, { description: "", quantity: 0, rate: 0 }],
+        });
+    };
 
     const calculateTotal = () => {
         return formData.items.reduce(
@@ -56,161 +62,152 @@ const InvoicePreview = () => {
 
     return (
         <>
-            <main
-                className="m-5 p-5 xl:grid grid-cols-2 gap-10 xl:items-start"
-                style={{
-                    maxWidth: "1920px",
-                    margin: "auto",
-                }}
-            >
-                <section>
-                    <div className="bg-white p-5 rounded shadow">
-                        <div className="flex flex-col justify-center space-y-4">
-                            {/* Input Fields */}
-                            <div className="flex flex-col">
-                                <label htmlFor="companyLogo">Company Logo</label>
-                                <input
-                                    type="file"
-                                    name="companyLogo"
-                                    id="companyLogo"
-                                    placeholder="Enter Company Logo"
-                                    value={formData.companyLogo}
-                                    onChange={handleInputChange}
-                                    className="border rounded p-2"
-                                />
-                            </div>
-
-                            <div className="flex flex-col">
-                                <label htmlFor="companyName">Company Name</label>
-                                <input
-                                    type="text"
-                                    name="companyName"
-                                    id="companyName"
-                                    placeholder="Enter Company Name"
-                                    value={formData.companyName}
-                                    onChange={handleInputChange}
-                                    className="border rounded p-2"
-                                />
-                            </div>
-                            <div className="flex flex-col">
-                                <label htmlFor="address">Company Address</label>
-                                <input
-                                    type="text"
-                                    name="address"
-                                    id="address"
-                                    placeholder="Enter Company Address"
-                                    value={formData.address}
-                                    onChange={handleInputChange}
-                                    className="border rounded p-2"
-                                />
-                            </div>
-
-                            <div className="flex flex-col">
-                                <label htmlFor="email">Email</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    id="email"
-                                    placeholder="Enter Email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    className="border rounded p-2"
-                                />
-                            </div>
-
-                            <div className="flex flex-col">
-                                <label htmlFor="customerName">Customer Name</label>
-                                <input
-                                    type="text"
-                                    name="customerName"
-                                    id="customerName"
-                                    placeholder="Enter Customer Name"
-                                    value={formData.customerName}
-                                    onChange={handleInputChange}
-                                    className="border rounded p-2"
-                                />
-                            </div>
-
-                            <div className="flex flex-col">
-                                <label htmlFor="customerAddress">Customer Address</label>
-                                <input
-                                    type="text"
-                                    name="customerAddress"
-                                    id="customerAddress"
-                                    placeholder="Enter Customer Address"
-                                    value={formData.customerAddress}
-                                    onChange={handleInputChange}
-                                    className="border rounded p-2"
-                                />
-                            </div>
-
-                            <div>
-                                <table className="max-w-40 border-collapse border">
-                                <thead>
-                                    <tr className="bg-gray-200">
-                                        <th className="border px-4 py-2">Description</th>
-                                        <th className="border px-4 py-2">Quantity</th>
-                                        <th className="border px-4 py-2">Rate</th>
-                                        <th className="border px-4 py-2">Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {formData.items.map((item, index) => (
-                                        <tr key={index}>
-                                            <td className="border px-4 py-2"><input type="text" value={item.description} onChange={(e) => handleItemChange(index, "description", e.target.value)}/></td>
-                                            <td className="border px-4 py-2"><input type="number" value={item.quantity} onChange={(e) => handleItemChange(index, "quantity", parseInt(e.target.value) || 0)}/></td>
-                                            <td className="border px-4 py-2"><input type="text" value={item.rate} onChange={(e) => handleItemChange(index, "rate", parseFloat(e.target.value) || 0)}/></td>
-                                            <td className="border px-4 py-2 text-right">
-                                                {item.quantity * item.rate}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                                
-                                </table>
-                            </div>
-
-
-                        </div>
+            <Navbar />
+            <main className="p-5 max-w-5xl mx-auto">
+                {/* Editable Form */}
+                <section className="mb-6 bg-gray-100 p-5 rounded-lg">
+                    <h2 className="text-lg font-semibold mb-4">Edit Invoice Details</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input
+                            type="text"
+                            name="companyName"
+                            value={formData.companyName}
+                            onChange={handleInputChange}
+                            placeholder="Company Name"
+                            className="p-2 border rounded"
+                        />
+                        <input
+                            type="text"
+                            name="address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            placeholder="Company Address"
+                            className="p-2 border rounded"
+                        />
+                        <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            placeholder="Company Email"
+                            className="p-2 border rounded"
+                        />
+                        <input
+                            type="text"
+                            name="customerName"
+                            value={formData.customerName}
+                            onChange={handleInputChange}
+                            placeholder="Customer Name"
+                            className="p-2 border rounded"
+                        />
+                        <input
+                            type="text"
+                            name="customerAddress"
+                            value={formData.customerAddress}
+                            onChange={handleInputChange}
+                            placeholder="Customer Address"
+                            className="p-2 border rounded"
+                        />
+                        <textarea
+                            name="notes"
+                            value={formData.notes}
+                            onChange={handleInputChange}
+                            placeholder="Remarks"
+                            className="p-2 border rounded col-span-1 sm:col-span-2"
+                        />
                     </div>
                 </section>
 
-                <div className="invoice__preview bg-white p-5 rounded-2xl border-4 border-blue-200">
-                    {/* Printable content */}
-                    <div ref={componentRef} className="p-5">
-                        <header className="text-center border-b pb-4 mb-4">
-                            <img
-                                src={logo}
-                                alt="Company Logo"
-                                className="mx-auto mb-2"
+                {/* Add New Row Section */}
+                <div className="mt-4 bg-gray-100 p-5 rounded-lg mb-6">
+                    <h2 className="text-lg font-semibold mb-4">Add New Item</h2>
+                    {formData.items.map((item, index) => (
+                        <div key={index} className="grid grid-cols-4 gap-4 mb-2">
+                            
+                            <input
+                                type="text"
+                                placeholder="Description"
+                                value={item.description}
+                                onChange={(e) =>
+                                    handleItemChange(index, "description", e.target.value)
+                                }
+                                className="p-2 border rounded"
                             />
-                            <h1 className="text-2xl font-bold">{formData.companyName}</h1>
-                            <p>{formData.address}</p>
-                            <p>{formData.email}</p>
-                        </header>
+                            <input
+                                type="number"
+                                placeholder="Quantity"
+                                value={item.quantity}
+                                onChange={(e) =>
+                                    handleItemChange(index, "quantity", e.target.value)
+                                }
+                                className="p-2 border rounded"
+                            />
+                            <input
+                                type="number"
+                                placeholder="Rate"
+                                value={item.rate}
+                                onChange={(e) => handleItemChange(index, "rate", e.target.value)}
+                                className="p-2 border rounded"
+                            />
+                        </div>
+                    ))}
+                    <button
+                        onClick={addNewItem}
+                        className="bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600 transition-all duration-150"
+                    >
+                        Add New Row
+                    </button>
+                    <button
+                            className="bg-red-500 text-white font-bold py-2 px-4 sm:px-8 rounded hover:bg-red-600 transition-all duration-150 ml-4 mt-4"
+                            onClick={clearAllItems}
+                        >
+                            Clear All Items
+                        </button>
+                </div>
 
-                        <section className="mb-4">
-                            <h2 className="text-lg font-semibold">Invoice To:</h2>
-                            <p>{formData.customerName}</p>
-                            <p>{formData.customerAddress}</p>
-                        </section>
+                {/* Invoice Preview */}
+                <div
+                    ref={componentRef}
+                    className="invoice__preview bg-white p-5 rounded-2xl border-4 border-blue-200"
+                >
+                    <header className="text-center border-b pb-4 mb-4">
+                        <img
+                            src={logo}
+                            alt="Company Logo"
+                            className="mx-auto mb-2 w-24 h-24 sm:w-32 sm:h-32"
+                        />
+                        <h1 className="text-xl sm:text-2xl font-bold">{formData.companyName}</h1>
+                        <p className="text-sm sm:text-base">{formData.address}</p>
+                        <p className="text-sm sm:text-base">{formData.email}</p>
+                    </header>
 
-                        <table className="w-10 border-collapse border">
+                    <section className="mb-4">
+                        <h2 className="text-base sm:text-lg font-semibold">Invoice To:</h2>
+                        <p className="text-sm sm:text-base">{formData.customerName}</p>
+                        <p className="text-sm sm:text-base">{formData.customerAddress}</p>
+                    </section>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse border text-sm sm:text-base">
                             <thead>
-                                <tr className="bg-gray-200">
-                                    <th className="border px-4 py-2">Description</th>
-                                    <th className="border px-4 py-2">Quantity</th>
-                                    <th className="border px-4 py-2">Rate</th>
-                                    <th className="border px-4 py-2">Amount</th>
+                                <tr className="bg-gray-200 text-center">
+                                    <th className="border px-2 sm:px-4 py-2">Description</th>
+                                    <th className="border px-2 sm:px-4 py-2" align="center">Quantity</th>
+                                    <th className="border px-2 sm:px-4 py-2">Rate</th>
+                                    <th className="border px-2 sm:px-4 py-2">Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {formData.items.map((item, index) => (
                                     <tr key={index}>
-                                        <td className="border px-4 py-2">{item.description}</td>
-                                        <td className="border px-4 py-2 text-center">{item.quantity}</td>
-                                        <td className="border px-4 py-2 text-right">{item.rate}</td>
-                                        <td className="border px-4 py-2 text-right">
+                                        <td className="border px-2 sm:px-4 py-2">{item.description}</td>
+                                        <td className="border px-2 sm:px-4 py-2 text-center">
+                                            {item.quantity}
+                                        </td>
+                                        <td className="border px-2 sm:px-4 py-2 text-right">
+                                            {item.rate}
+                                        </td>
+                                        <td className="border px-2 sm:px-4 py-2 text-right">
                                             {item.quantity * item.rate}
                                         </td>
                                     </tr>
@@ -218,45 +215,42 @@ const InvoicePreview = () => {
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colSpan="3" className="border px-4 py-2 text-right font-bold">
+                                    <td
+                                        colSpan="3"
+                                        className="border px-2 sm:px-4 py-2 text-right font-bold"
+                                    >
                                         Total
                                     </td>
-                                    <td className="border px-4 py-2 text-right font-bold">
+                                    <td className="border px-2 sm:px-4 py-2 text-right font-bold">
                                         {calculateTotal()}
                                     </td>
                                 </tr>
                             </tfoot>
                         </table>
-
-                        <section className="mt-4">
-                            <h2 className="text-lg font-semibold">Remarks</h2>
-                            <p>{formData.notes}</p>
-                        </section>
                     </div>
 
-                    <div className="flex justify-between mt-4 p-2">
-                        <button
-                            className="bg-green-500 text-white font-bold py-2 px-8 rounded hover:bg-green-600 transition-all duration-150"
-
-                        >
-                            Save
-                        </button>
-                        <button
-                            className="bg-blue-500 text-white font-bold py-2 px-8 rounded hover:bg-blue-600 transition-all duration-150"
-                            onClick={generateAndSavePDF}
-                        >
-                            Download
-                        </button>
-                        <button
-                            className="bg-yellow-500 text-white font-bold py-2 px-8 rounded hover:bg-yellow-600 transition-all duration-150"
-
-                        >
-                            Send
-                        </button>
-                    </div>
+                    <section className="mt-4">
+                        <h2 className="text-base sm:text-lg font-semibold">Remarks</h2>
+                        <p className="text-sm sm:text-base">{formData.notes}</p>
+                    </section>
+                </div>
 
 
 
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row justify-end mt-4 p-2 gap-2">
+                    <button className="bg-green-500 text-white font-bold py-2 px-4 sm:px-8 rounded hover:bg-green-600 transition-all duration-150">
+                        Save
+                    </button>
+                    <button
+                        className="bg-blue-500 text-white font-bold py-2 px-4 sm:px-8 rounded hover:bg-blue-600 transition-all duration-150"
+                        onClick={generateAndSavePDF}
+                    >
+                        Download
+                    </button>
+                    <button className="bg-orange-500 text-white font-bold py-2 px-4 sm:px-8 rounded hover:bg-orange-600 transition-all duration-150">
+                        Send
+                    </button>
                 </div>
             </main>
         </>

@@ -103,27 +103,9 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
 
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $unset: {
-                refreshToken: 1,
-                FCMToken: 1
-            }
-        },
-        {
-            new: true
-        }
+    return res.status(200).clearCookie('accessToken').status(200).json(
+        new ApiResponse(200, req.user, "User logged out successfully")
     );
-
-    const option = {
-        httpOnly: true,
-        secure: true
-    }
-
-    return res.status(200).clearCookie("accessToken", option).clearCookie("refreshToken", option).json(
-        new ApiResponse(200, {}, "User logged out")
-    )
 });
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {

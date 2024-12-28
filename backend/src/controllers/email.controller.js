@@ -1,9 +1,7 @@
-// controllers/otpController.js
 import { User } from '../models/user.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asynchandler.js';
-
 
 const verifyEmailLink = asyncHandler(async (req, res) => {
   try {
@@ -74,6 +72,5 @@ const verifyPassword = asyncHandler(async (req, res) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 })
-
 
 export { verifyEmailLink, forgotPasswordLink, verifyPassword }

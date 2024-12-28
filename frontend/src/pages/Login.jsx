@@ -5,39 +5,37 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import {jwtDecode} from 'jwt-decode';
+import { useDispatch } from 'react-redux';
+import { login } from '../redux/slices/authSlice';
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState();
   const [password, setPassword] = useState()
-  
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    console.log('Form submitted');
-  };
+  const dispatch = useDispatch();
 
   const loginUser = async (e)=>{
     e.preventDefault();
 
     if(!email || !password){
-        alert("all fields are required");
-        return;
+      alert("all fields are required");
+      return;
     }
 
     try {
         const response = await axios.post(
             `${import.meta.env.VITE_BASE_URL}/api/v1/user/login`,
             {
-                email: email,
-                password: password
+              email: email,
+              password: password
             },
             {
-                withCredentials: true
+              withCredentials: true
             }
         );
         alert(response.data.message);
-        navigate("/Dashboard");
+        dispatch(login(response.data.data));
+        navigate("/dashboard");
     } catch (error) {
         alert(error.response?.data.message || error.message);
     }
@@ -58,7 +56,8 @@ const Login = () => {
         }
       );
       alert(response.data.message);
-      navigate("/");
+      dispatch(login(response.data.data));
+      navigate("/dashboard");
     } catch (error) {
       alert(error.response?.data.message || error.message);
     }
@@ -121,63 +120,3 @@ const Login = () => {
 };
 
 export default Login;
-
-
-// import React, { useState } from 'react';
-// import { GoogleLogin } from '@react-oauth/google';
-// import { GoogleOAuthProvider } from "@react-oauth/google";
-// import {jwtDecode} from 'jwt-decode';
-// import axios from 'axios';
-// import { Link, useNavigate } from "react-router-dom";
-
-// const Login = () => {
-//   const navigate = useNavigate();
-//   const [user, setUser] = useState(null);
-
-  // const handleSuccess = (response) => {
-  //   // Extract the token from the response
-  //   const token = response.credential;
-  //   const decoded = jwtDecode(token);
-  //   googleLogin(decoded);
-  //   console.log(decoded.email);
-  //   console.log(decoded.name);
-  //   console.log(decoded.picture);
-  // };
-
-  // const handleError = (error) => {
-  //   alert('Google Login Error:', error);
-  // };
-
-  // const googleLogin = async (token) => {
-
-  //   try {
-  //     const response = await axios.post(
-  //       `${import.meta.env.VITE_BASE_URL}/api/v1/oauth/login`,
-  //       {
-  //         name: token.name,
-  //         email: token.email,
-  //         profilePic: token.picture,
-  //       },
-  //       {
-  //         withCredentials: true,
-  //       }
-  //     );
-  //     alert(response.data.message);
-  //     navigate("/");
-  //   } catch (error) {
-  //     alert(error.response?.data.message || error.message);
-  //   }
-  // };
-
-//   return (
-// <>
-//     <GoogleOAuthProvider clientId='GOOGLE_CLIENT_ID'>
-//       <GoogleLogin 
-//       onSuccess={handleSuccess}
-//       onError={handleError}/>
-//     </GoogleOAuthProvider>
-// </>
-//   );
-// };
-
-// export default Login;

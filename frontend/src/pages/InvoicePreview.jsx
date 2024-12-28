@@ -5,9 +5,6 @@ import Navbar from "../components/Navbar";
 
 const InvoicePreview = () => {
     const componentRef = useRef();
-
-    
-
     const [formData, setFormData] = useState({
         companyName: "",
         address: "",
@@ -62,7 +59,7 @@ const InvoicePreview = () => {
 
     return (
         <>
-            <Navbar />
+            <Navbar activePage="Invoices"/>
             <main className="p-5 max-w-5xl mx-auto">
                 {/* Editable Form */}
                 <section className="mb-6 bg-gray-100 p-5 rounded-lg">
@@ -174,7 +171,7 @@ const InvoicePreview = () => {
                         <img
                             src={logo}
                             alt="Company Logo"
-                            className="mx-auto mb-2 w-24 h-24 sm:w-32 sm:h-32"
+                            className="mx-auto mb-2 h-24 sm:w-32 sm:h-32"
                         />
                         <h1 className="text-xl sm:text-2xl font-bold">{formData.companyName}</h1>
                         <p className="text-sm sm:text-base">{formData.address}</p>

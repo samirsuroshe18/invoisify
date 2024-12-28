@@ -3,6 +3,6 @@ import { createInvoice } from "../controllers/invoice.controller.js";
 
 const router = Router();
 
-router.route('/createinvoice').post(createInvoice);
+router.route('/create-invoice').post(createInvoice);
 
 export default router;

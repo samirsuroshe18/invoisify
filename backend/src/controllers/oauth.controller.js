@@ -22,24 +22,24 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 const googleLogin = asyncHandler(async (req, res) => {
     const { name, email, profilePic } = req.body;
-
+    
     if (!name || !email || !profilePic) {
         throw new ApiError(400, "Please provide all the required fields");
     }
 
     const existedUser = await User.findOne({ email });
 
-    if (existedUser && existedUser?.isGoogleVerified === false) {
+    if (existedUser && existedUser?.isVerified) {
         throw new ApiError(409, 'An account with this email already exists.');
     }
 
-    if (!existedUser) {
+    if (!existedUser && !existedUser?.isVerified && !existedUser?.isGoogleVerified) {
+        
         const loggedInUser = await User.create({
             name,
             email,
             profilePic,
             isGoogleVerified: true,
-            isVerified: true,
         });
 
         if (!loggedInUser) {
@@ -49,29 +49,35 @@ const googleLogin = asyncHandler(async (req, res) => {
         const { accessToken, refreshToken } = await generateAccessAndRefreshToken(loggedInUser._id);
 
         //option object is created beacause we dont want to modified the cookie to front side
-    const option = {
-        httpOnly: 'true' === process.env.HTTP_ONLY,
-        secure: 'true' === process.env.COOKIE_SECURE,
-        maxAge: Number(process.env.COOKIE_MAX_AGE),
+        const option = {
+            httpOnly: 'true' === process.env.HTTP_ONLY,
+            secure: 'true' === process.env.COOKIE_SECURE,
+            maxAge: Number(process.env.COOKIE_MAX_AGE),
+        }
+
+        return res.status(200).cookie('accessToken', accessToken, option).cookie('refreshToken', refreshToken, option).json(
+            new ApiResponse(200, { loggedInUser, accessToken, refreshToken }, "User logged in sucessully")
+        );
     }
 
-    return res.status(200).cookie('accessToken', accessToken, option).cookie('refreshToken', refreshToken, option).json(
-        new ApiResponse(200, { loggedInUser, accessToken, refreshToken }, "User logged in sucessully")
-    );
-    }
+    const isUpdate = await User.findByIdAndUpdate(
+        existedUser._id,
+        {
+            $set: {
+                name: name,
+                profilePic: profilePic,
+            }
+        },
+        { new: true }
+    ).select("-password")
 
-    existedUser.name = name;
-    existedUser.profilePic = profilePic;
-    existedUser.isGoogleVerified = true;
+    console.log(isUpdate);
 
-    // when we use save() method is used then all the fields are neccesary so to avoid that we have to pass an object with property {validatBeforeSave:false}
-    await existedUser.save({ validateBeforeSave: false });
-
-    if (!existedUser) {
+    if (!isUpdate) {
         throw new ApiError(500, "Something went wrong");
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(existedUser._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(isUpdate._id);
 
     //option object is created beacause we dont want to modified the cookie to front side
     const option = {
@@ -81,7 +87,7 @@ const googleLogin = asyncHandler(async (req, res) => {
     }
 
     return res.status(200).cookie('accessToken', accessToken, option).cookie('refreshToken', refreshToken, option).json(
-        new ApiResponse(200, { existedUser, accessToken, refreshToken }, "User logged in sucessully")
+        new ApiResponse(200, { isUpdate, accessToken, refreshToken }, "User logged in sucessully")
     );
 });
 

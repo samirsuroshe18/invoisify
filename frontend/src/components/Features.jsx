@@ -3,10 +3,9 @@ import Typed from 'typed.js';
 import { FaCheckCircle, FaCog, FaFileInvoice, FaArrowDown } from 'react-icons/fa';
 import { Link } from 'react-scroll';
 import { useSpring, animated } from 'react-spring';
-import ThreeJSBackground from './ThreeJSBackground'; // Three.js background component
 
 const Features = () => {
-  // Typed.js effect initialization
+  
   useEffect(() => {
     const options = {
       strings: ['Easily Manage Your Invoices', 'Create Professional Invoices', 'Track Financial Transactions'],
@@ -19,7 +18,7 @@ const Features = () => {
     new Typed('#typed-text', options);
   }, []);
 
-  // Spring animation for fade-in effect
+  
   const fadeIn = useSpring({
     opacity: 1,
     from: { opacity: 0 },
@@ -28,10 +27,7 @@ const Features = () => {
 
   return (
     <section className="relative w-full min-h-screen bg-gray-100">
-      {/* Three.js background component */}
-      <ThreeJSBackground />
-      
-      <div className="max-w-screen-xl mx-auto px-8 py-16 relative z-10">
+      <div className="max-w-screen-xl mx-auto px-8 py-16 relative z-10" id="features">
         <animated.div style={fadeIn} className="text-center space-y-6 mb-12">
           <h1 className="text-4xl lg:text-5xl font-bold text-gray-800">
             Our Key Features
@@ -41,7 +37,6 @@ const Features = () => {
           </p>
         </animated.div>
 
-        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           
           <div className="bg-white p-6 rounded-lg shadow-lg text-center hover:shadow-2xl transition duration-300">
@@ -53,7 +48,7 @@ const Features = () => {
               Quickly generate and send professional invoices to your clients.
             </p>
             <Link
-              to="features"
+              to="/features"
               smooth={true}
               offset={-70}
               duration={500}

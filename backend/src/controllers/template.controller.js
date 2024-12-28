@@ -3,7 +3,6 @@ import ApiResponse from '../utils/ApiResponse.js';
 import ApiError from '../utils/apiError.js';
 import asyncHandler from '../utils/asynchandler.js';
 
-
 const createTemplate = asyncHandler(async (req, res) => {
     const { companyName, billingAddress, backgroundColor } = req.body;
     

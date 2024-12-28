@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { useDispatch } from 'react-redux';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Register = () => {
     const [password, setPassword] = useState()
     const [confirmPassword, setConfirmPassword] = useState();
     const [name ,setName] = useState();
+    const dispatch = useDispatch();
 
     const registerUser = async (e)=>{
         e.preventDefault();
@@ -38,6 +40,8 @@ const Register = () => {
                 }
             );
             alert(response.data.message);
+            navigate("/login");
+            dispatch(login(response.data.data));
         } catch (error) {
             alert(error.response?.data.message || error.message);
         }
@@ -58,7 +62,8 @@ const Register = () => {
                 }
             );
             alert(response.data.message);
-            navigate("/");
+            dispatch(login(response.data.data));
+            navigate("/dashboard");
         } catch (error) {
             alert(error.response?.data.message || error.message);
         }
@@ -89,7 +94,7 @@ const Register = () => {
                         
                         <Form.Group controlId="formBasicName">
                             <Form.Label>Name</Form.Label>
-                            <Form.Control type="text" onChange={(e)=>setName(e.target.value)} placeholder="Enamenter Name" required />
+                            <Form.Control type="text" onChange={(e)=>setName(e.target.value)} placeholder="Enter Name" required />
                         </Form.Group>
 
                         <Form.Group controlId="formBasicPassword">
@@ -105,7 +110,7 @@ const Register = () => {
                         </Form.Group>
 
                         <Button variant="primary" type="submit" className="w-100 mt-3">
-                            Login
+                            Register Account
                         </Button>
                     </Form>
 

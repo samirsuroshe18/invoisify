@@ -12,19 +12,11 @@ AOS.init();
 
 const Home = () => {
 
-  
-
   return (
     <div className="">
-      
       <Navbar activePage="Home"/>
-
       <HeroSection/>
-
       <Features/>
-
-
-
     </div>
   );
 };

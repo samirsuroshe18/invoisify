@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import html2pdf from "html2pdf.js";
-import { jsPDF } from "jspdf";
+import logo from "../assets/invoisify.png";
 
 const InvoicePreview = () => {
     const componentRef = useRef();
@@ -39,6 +39,13 @@ const InvoicePreview = () => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
+
+    const handleItemChange = (index, field, value) => {
+        const updatedItems = [...formData.items];
+        updatedItems[index][field] = value;
+        setFormData({ ...formData, items: updatedItems });
+    };
+    
 
     const calculateTotal = () => {
         return formData.items.reduce(
@@ -136,6 +143,34 @@ const InvoicePreview = () => {
                                     className="border rounded p-2"
                                 />
                             </div>
+
+                            <div>
+                                <table className="max-w-40 border-collapse border">
+                                <thead>
+                                    <tr className="bg-gray-200">
+                                        <th className="border px-4 py-2">Description</th>
+                                        <th className="border px-4 py-2">Quantity</th>
+                                        <th className="border px-4 py-2">Rate</th>
+                                        <th className="border px-4 py-2">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {formData.items.map((item, index) => (
+                                        <tr key={index}>
+                                            <td className="border px-4 py-2"><input type="text" value={item.description} onChange={(e) => handleItemChange(index, "description", e.target.value)}/></td>
+                                            <td className="border px-4 py-2"><input type="number" value={item.quantity} onChange={(e) => handleItemChange(index, "quantity", parseInt(e.target.value) || 0)}/></td>
+                                            <td className="border px-4 py-2"><input type="text" value={item.rate} onChange={(e) => handleItemChange(index, "rate", parseFloat(e.target.value) || 0)}/></td>
+                                            <td className="border px-4 py-2 text-right">
+                                                {item.quantity * item.rate}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                
+                                </table>
+                            </div>
+
+
                         </div>
                     </div>
                 </section>
@@ -145,7 +180,7 @@ const InvoicePreview = () => {
                     <div ref={componentRef} className="p-5">
                         <header className="text-center border-b pb-4 mb-4">
                             <img
-                                src={formData.companyLogo}
+                                src={logo}
                                 alt="Company Logo"
                                 className="mx-auto mb-2"
                             />

@@ -12,6 +12,7 @@ import {
 import Register from "../pages/Register.jsx";
 import InvoiceMaker from "../pages/InvoiceMaker.jsx";
 import InvoicePreview from "../pages/InvoicePreview.jsx";
+import Dashboard from "../pages/Dashboard.jsx";
   
   const router = createBrowserRouter(
     createRoutesFromElements(
@@ -27,6 +28,7 @@ import InvoicePreview from "../pages/InvoicePreview.jsx";
         <Route path="*" element={<NotFound />} />
         <Route path="/invoice-maker" element={<InvoiceMaker />} />
         <Route path="/invoice-preview" element={<InvoicePreview />} />
+        <Route path="/Dashboard" element={<Dashboard />} />
       </>
     )
   );

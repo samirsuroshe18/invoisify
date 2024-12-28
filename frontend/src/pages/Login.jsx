@@ -37,7 +37,7 @@ const Login = () => {
             }
         );
         alert(response.data.message);
-        navigate("/")
+        navigate("/Dashboard");
     } catch (error) {
         alert(error.response?.data.message || error.message);
     }

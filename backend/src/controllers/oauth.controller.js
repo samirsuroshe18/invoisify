@@ -66,12 +66,15 @@ const googleLogin = asyncHandler(async (req, res) => {
             $set: {
                 name: name,
                 profilePic: profilePic,
+                isGoogleVerified: true,
+            },
+            $unset: {
+                password: 1,
+                isVerified: 1,
             }
         },
         { new: true }
     ).select("-password")
-
-    console.log(isUpdate);
 
     if (!isUpdate) {
         throw new ApiError(500, "Something went wrong");

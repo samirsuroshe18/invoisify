@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 import { useSelector } from 'react-redux';
 
 const Dashboard = () => {
-    const user = useSelector(state => state.auth?.userData);
+    const user = useSelector(state => state.auth?.userData?.isUpdate);
   console.log('userData dashboard', user);
 
     // const user = {

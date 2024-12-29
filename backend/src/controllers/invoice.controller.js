@@ -2,13 +2,13 @@ import { Invoice } from '../models/invoice.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { uploadOnCloudinary } from '../utils/cloudinary.js';
 
 const createInvoice = asyncHandler(async (req, res) => {
     const {
         companyName,
         companyEmail,
         companyAddress,
-        companyLogo,
         customerName,
         customerAddress,
         additionalNotes,
@@ -20,56 +20,39 @@ const createInvoice = asyncHandler(async (req, res) => {
         items,
     } = req.body;
 
+    const file = req.file.path;
+    console.log(file);
+
     // Log request body for debugging
     console.log("Request body:", req.body);
-
-    // Ensure required fields are present
-    const requiredFields = [
-        companyName,
-        companyLogo,
-        companyAddress,
-        totalAmount,
-        customerName,
-        issueDate,
-        dueDate,
-        status,
-    ];
-
-    const areFieldsValid = requiredFields.every(field =>
-        field !== undefined &&
-        field !== null &&
-        (typeof field !== 'string' || field.trim() !== '')
-    );
-
-    if (!areFieldsValid) {
-        throw new ApiError(400, "All required fields must be provided and non-empty");
-    }
-
-    // Check if `items` array is valid
-    if (!Array.isArray(items) || items.length === 0) {
-        throw new ApiError(400, "At least one item is required");
-    }
-
-    const validItems = items.every(item =>
-        item.description && item.quantity > 0 && item.rate > 0
-    );
-
-    if (!validItems) {
-        throw new ApiError(400, "Each item must have a valid description, quantity, and rate");
-    }
+    const path = await uploadOnCloudinary(file);
+    console.log(path?.url);
+    console.log(`Company Name: ${companyName}`);
+    console.log(`Company Email: ${companyEmail}`);
+    console.log(`Company Address: ${companyAddress}`);
+    console.log(`Company Logo: ${path.url}`);
+    console.log(`Customer Name: ${customerName}`);
+    console.log(`Customer Address: ${customerAddress}`);
+    console.log(`Notes: ${additionalNotes}`);
+    console.log(`Total amt:  ${Number(totalAmount)}`);
+    console.log(`Issue Date:  ${new Date(issueDate)}`);
+    console.log(`Due date:  ${new Date(dueDate)}`);
+    console.log(`Paid date:  ${new Date(paidDate)}`);
+    console.log(`Status:  ${status}`);
+    console.log(`Items:  ${items}`);
 
     // Create invoice in the database
     const newInvoice = await Invoice.create({
         companyName,
         companyEmail,
         companyAddress,
-        companyLogo,
+        companyLogo: path?.url,
         customerName,
         customerAddress,
         additionalNotes,
-        totalAmount,
+        totalAmount : Number(totalAmount),
         issueDate: new Date(issueDate), // Convert to Date object
-        paidDate: paidDate ? new Date(paidDate) : null, // Optional
+        paidDate: paidDate ? new Date(paidDate) : undefined, // Optional
         dueDate: new Date(dueDate),
         status,
         items,

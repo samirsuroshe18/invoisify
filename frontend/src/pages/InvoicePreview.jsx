@@ -3,30 +3,48 @@ import html2pdf from "html2pdf.js";
 import logo from "../assets/invoisify.png";
 import Navbar from "../components/Navbar";
 import axios from "axios";
+import { useAlert } from "../hooks/useAlert";
+
 
 const InvoicePreview = () => {
 
-
+    const [AlertComponent, showAlert] = useAlert();
 
     const componentRef = useRef();
     const [formData, setFormData] = useState({
-        companyName : "mohit",
-        companyEmail:"www.mohit.com",
-        companyAddress :"www",
-        companyLogo:"ww",
-        customerName: "ww",
-        customerAddress: "www",
-        additionalNotes: "ww",
+        companyName: "Tanishq Jewellers",
+        companyEmail: "tanishq@gmail.com ",
+        companyAddress: "Dombivli",
+        companyLogo: "",
+        customerName: "",
+        customerAddress: "",
+        additionalNotes: "test",
         totalAmount: 0,
         issueDate: new Date().toISOString().split("T")[0],
-        paidDate: new Date().toISOString().split("T")[0],
+        paidDate: "2024-12-10",
         dueDate: new Date().toISOString().split("T")[0],
         status: "Pending",
         items: [
-            { description: "rerer", quantity: 1, rate: 1 },
-            
+            { description: "hahahh", quantity: 1, rate: 1 },
+
         ],
     });
+
+    const formatDate = (isoDate, separator = " ") => {
+        const [year, month, day] = isoDate.split("-");
+        return `${day}${separator}${month}${separator}${year}`;
+    };
+
+
+    const issueDateISO = new Date().toISOString().split("T")[0];
+    const dueDateISO = new Date(new Date().setDate(new Date().getDate() + 7))
+        .toISOString()
+        .split("T")[0];
+
+
+    const formattedIssueDate = formatDate(issueDateISO, "-");
+    const formattedDueDate = formatDate(dueDateISO, "-");
+
 
     const generateAndSavePDF = () => {
         console.log("Attempting to generate PDF");
@@ -47,20 +65,77 @@ const InvoicePreview = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     try {
+    //         const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/v1/invoice/create-invoice`, formData);
+    //         showAlert('Invoice created successfully:' || response.data, 'success');
+    //     } catch (error) {
+    //         console.log('Error creating invoice:', error);
+    //         showAlert('Error creating invoice:' || error, 'error');
+    //     }
+    // };
+    const handleUpload = async (e) => {
         e.preventDefault();
+        if (!formData.companyLogo) {
+            alert(" Please select a file to upload");
+            return;
+        }
+
+        const form = new FormData();
+        form.append("companyLogo", formData.companyLogo); // Append the video file to the form data
+        form.append("companyName", formData.companyName); // Append the title to the form data
+        form.append("companyEmail", formData.companyEmail); // Append the description to the form data
+        form.append("companyAddress", formData.companyAddress); // Append the tags to the form data
+        form.append("customerName", formData.customerName); // Append the category to the form data
+        form.append("customerAddress", formData.customerAddress); // Append the privacy to the form data 
+        form.append("additionalNotes", formData.additionalNotes); // Append the privacy to the form data
+        form.append("totalAmount", formData.totalAmount); // Append the privacy to the form data
+        form.append("issueDate", formData.issueDate); // Append the privacy to the form data
+        form.append("paidDate", formData.paidDate); // Append the privacy to the form data
+        form.append("dueDate", formData.dueDate); // Append the privacy to the form data
+        form.append("status", formData.status); // Append the privacy to the form data
+        form.append("items", formData.items); // Append the privacy to the form data
+
         try {
-            const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/v1/invoice/create-invoice`, formData);
-            console.log('Invoice created successfully:', response.data);
+            // setLoading(true);
+            const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/v1/invoice/create-invoice`, formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data", // Telling Axios we are sending form data
+                    },
+                    // withCredentials: true, // Include credentials (cookies) with the request
+                }
+            );
+            if(response.status === 200)
+            showAlert("Video uploaded successfully!", 'success');
+           
         } catch (error) {
-            console.error('Error creating invoice:', error);
+            // const errorMessage = handleAxiosError(error);
+            showAlert("Error uploading video:" || error,'error');
+        } finally {
+            // setLoading(false);
         }
     };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+    const handleInputChange = (event) => {
+        const { name, value, files } = event.target;
+
+        if (name === 'customerLogo' && files) {
+
+            setFormData((prevData) => ({
+                ...prevData,
+                companyLogo: files[0],
+            }));
+        } else {
+
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: value,
+            }));
+        }
     };
+
 
     const handleItemChange = (index, field, value) => {
         const updatedItems = [...formData.items];
@@ -89,6 +164,7 @@ const InvoicePreview = () => {
     return (
         <>
             <Navbar activePage="Invoices" />
+            <AlertComponent />
             <main className="p-5 max-w-5xl mx-auto">
                 {/* Editable Form */}
                 <section className="mb-6 bg-gray-100 p-5 rounded-lg">
@@ -104,16 +180,16 @@ const InvoicePreview = () => {
                         />
                         <input
                             type="text"
-                            name="address"
-                            value={formData.address}
+                            name="companyAddress"
+                            value={formData.companyAddress}
                             onChange={handleInputChange}
                             placeholder="Company Address"
                             className="p-2 border rounded bg-white"
                         />
                         <input
                             type="email"
-                            name="email"
-                            value={formData.email}
+                            name="companyEmail"
+                            value={formData.companyEmail}
                             onChange={handleInputChange}
                             placeholder="Company Email"
                             className="p-2 border rounded bg-white"
@@ -135,6 +211,18 @@ const InvoicePreview = () => {
                             className="p-2 border rounded bg-white"
                         />
 
+                        <div className="flex items-center justify-between ">
+                            <label for="dueDate" className="text-md px-2 w-1/3 font-semibold">Due Date:</label>
+                            <input
+                                type="date"
+                                name="dueDate"
+                                value={formData.dueDate}
+                                onChange={handleInputChange}
+                                placeholder="Due Date"
+                                className="p-2 border rounded w-2/3 bg-white"
+                            />
+                        </div>
+
                         <div className="flex items-center">
                             <label
                                 htmlFor="customerLogo"
@@ -153,24 +241,9 @@ const InvoicePreview = () => {
                                 {formData.companyLogo ? formData.companyLogo.name : 'No file chosen'}
                             </span>
                         </div>
-                        <div className="flex items-center">
-                            <label
-                                htmlFor="dueDate"
-                                className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                            >
-                                Due Date
-                            </label>
-                            <input
-                                type="date"
-                                id="dueDate"
-                                name="dueDate"
-                                onChange={handleInputChange}
-                                className="hidden"
-                            />
-                            <span className="ml-4 text-gray-600">
-                                {formData.companyLogo ? formData.companyLogo.name : 'No file chosen'}
-                            </span>
-                        </div>
+
+
+
 
 
                         <textarea
@@ -178,7 +251,7 @@ const InvoicePreview = () => {
                             value={formData.notes}
                             onChange={handleInputChange}
                             placeholder="Remarks"
-                            className="p-2 border rounded col-span-1 bg-white sm:col-span-2"
+                            className="p-2 border rounded col-span-1 focus:ring-blue-600 bg-white sm:col-span-2"
                         />
                     </div>
                 </section>
@@ -237,9 +310,9 @@ const InvoicePreview = () => {
                 >
                     <header className="text-center border-b pb-4 mb-4">
                         <img
-                            src={logo}
+                            src={formData.companyLogo ? URL.createObjectURL(formData.companyLogo) : logo}
                             alt="Company Logo"
-                            className="mx-auto mb-2 h-24 sm:w-32 sm:h-32"
+                            className="mx-auto mb-2 w-48 h-24 sm:w-32 sm:h-32"
 
                         />
                         <h1 className="text-xl sm:text-2xl font-bold">{formData.companyName}</h1>
@@ -249,8 +322,14 @@ const InvoicePreview = () => {
 
                     <section className="mb-4">
                         <h2 className="text-base sm:text-lg font-semibold">Invoice To:</h2>
-                        <p className="text-sm sm:text-base">{formData.customerName}</p>
-                        <p className="text-sm sm:text-base">{formData.customerAddress}</p>
+                        <div className="flex justify-between">
+                            <p className="text-sm sm:text-base">{formData.customerName}</p>
+                            <p className="text-sm sm:text-base">Issue Date: {formattedIssueDate}</p>
+                        </div>
+                        <div className="flex justify-between">
+                            <p className="text-sm sm:text-base">{formData.customerAddress}</p>
+                            <p className="text-sm sm:text-base">Due Date: {formattedDueDate}</p>
+                        </div>
                     </section>
 
                     <div className="overflow-x-auto">
@@ -305,7 +384,7 @@ const InvoicePreview = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-end mt-4 p-2 gap-2">
-                    <button className="bg-green-500 text-white font-bold py-2 px-4 sm:px-8 rounded hover:bg-green-600 transition-all duration-150" onClick={handleSubmit}>
+                    <button className="bg-green-500 text-white font-bold py-2 px-4 sm:px-8 rounded hover:bg-green-600 transition-all duration-150" onClick={handleUpload}>
                         Save
                     </button>
                     <button

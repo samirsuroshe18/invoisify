@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 
 const itemSchema = new mongoose.Schema({
-    description: { type: String, required: true },
-    quantity: { type: Number, required: true },
-    rate: { type: Number, required: true },
+    description: { type: String, required: false },
+    quantity: { type: Number, required: false },
+    rate: { type: Number, required: false },
 });
 
 const invoiceSchema = new mongoose.Schema({
@@ -19,7 +19,7 @@ const invoiceSchema = new mongoose.Schema({
     paidDate: { type: Date, required: false },
     dueDate: { type: Date, required: true },
     status: { type: String, required: true },
-    items: [itemSchema],
+    // items: [itemSchema],
 });
 
 export const Invoice = mongoose.model("Invoice", invoiceSchema);

@@ -7,34 +7,47 @@ const invoiceSchema = new Schema({
         required: true,
         
     },
-    logo : {
+   companyAddress: {
+    type: String,
+    required: true,
+   },
+    companyEmail : {
         type: String,
         required: true,
     },
-    address : {
+    companyLogo: {
         type: String,
         required: true,
     },
-    totalAmount : {
+    customerName: {
         type: String,
         required: true,
     },
-    customerName : {
+    customerAddress: {
         type: String,
         required: true,
     },
-    issueDate : {
+    additionalNote: {
         type: String,
+        required: false,
+    },
+    totalAmount: {
+        type: Number,
         required: true,
     },
-    dueDate : {
-        type: String,
+    issueDate: {
+        type: Date,
         required: true,
     },
-    paidDate : {
-        type: String,
+    dueDate: {
+        type: Date,
+        required: true,
     },
-    status : {
+    paidDate: {
+        type: Date,
+        required: false,
+    },
+    status: {
         type: String,
         required: true,
     },

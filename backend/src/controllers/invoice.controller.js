@@ -12,13 +12,16 @@ const createInvoice = asyncHandler(async (req, res) => {
 
     const newInvoice = await Invoice.create({
         companyName,
-        logo,
-        address,
-        totalAmount,
+        companyEmail,
+        companyAddress, 
+        companyLogo, 
         customerName,
+        customerAddress,
+        additionalNotes,
+        totalAmount,
         issueDate,
-        dueDate,
         paidDate,
+        dueDate,
         status
     });
 

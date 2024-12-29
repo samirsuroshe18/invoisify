@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { useDispatch } from 'react-redux';
+import {login} from "../redux/slices/authSlice.js";
 import { useAlert } from '../hooks/useAlert';
 
 const Register = () => {

@@ -7,9 +7,7 @@ import { useAlert } from "../hooks/useAlert";
 
 
 const InvoicePreview = () => {
-
     const [AlertComponent, showAlert] = useAlert();
-
     const componentRef = useRef();
     const [formData, setFormData] = useState({
         companyName: "",
@@ -23,9 +21,9 @@ const InvoicePreview = () => {
         issueDate: new Date().toISOString().split("T")[0],
         paidDate: "2024-12-10",
         dueDate: new Date().toISOString().split("T")[0],
-        status: "",
+        status: "Pending",
         items: [
-            { description: "", quantity: 1, rate: 1 },
+            { description: "hahahh", quantity: 1, rate: 1 },
 
         ],
     });
@@ -35,19 +33,12 @@ const InvoicePreview = () => {
         return `${day}${separator}${month}${separator}${year}`;
     };
 
-
     const issueDateISO = new Date().toISOString().split("T")[0];
-    const dueDateISO = new Date(new Date().setDate(new Date().getDate() + 7))
-        .toISOString()
-        .split("T")[0];
-
-
+    const dueDateISO = new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split("T")[0];
     const formattedIssueDate = formatDate(issueDateISO, "-");
     const formattedDueDate = formatDate(dueDateISO, "-");
 
-
     const generateAndSavePDF = () => {
-        console.log("Attempting to generate PDF");
         const options = {
             filename: `${formData.customerName}_invoice.pdf`,
             html2canvas: { scale: 2 },
@@ -65,70 +56,56 @@ const InvoicePreview = () => {
         }
     };
 
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-    //     try {
-    //         const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/v1/invoice/create-invoice`, formData);
-    //         showAlert('Invoice created successfully:' || response.data, 'success');
-    //     } catch (error) {
-    //         console.log('Error creating invoice:', error);
-    //         showAlert('Error creating invoice:' || error, 'error');
-    //     }
-    // };
-    const handleUpload = async (e) => {
-        e.preventDefault();
+    const handleUpload = async () => {
+
         if (!formData.companyLogo) {
             alert(" Please select a file to upload");
             return;
         }
 
         const form = new FormData();
-        form.append("companyLogo", formData.companyLogo); 
-        form.append("companyName", formData.companyName); 
-        form.append("companyEmail", formData.companyEmail); 
-        form.append("companyAddress", formData.companyAddress); 
-        form.append("customerName", formData.customerName); 
-        form.append("customerAddress", formData.customerAddress); 
-        form.append("additionalNotes", formData.additionalNotes); 
-        form.append("totalAmount", formData.totalAmount); 
-        form.append("issueDate", formData.issueDate); 
-        form.append("paidDate", formData.paidDate);
-        form.append("dueDate", formData.dueDate); 
-        form.append("status", formData.status); 
-        form.append("items", formData.items); 
+        form.append("companyLogo", formData.companyLogo); // Append the video file to the form data
+        form.append("companyName", formData.companyName); // Append the title to the form data
+        form.append("companyEmail", formData.companyEmail); // Append the description to the form data
+        form.append("companyAddress", formData.companyAddress); // Append the tags to the form data
+        form.append("customerName", formData.customerName); // Append the category to the form data
+        form.append("customerAddress", formData.customerAddress); // Append the privacy to the form data 
+        form.append("additionalNotes", formData.additionalNotes); // Append the privacy to the form data
+        form.append("totalAmount", formData.totalAmount); // Append the privacy to the form data
+        form.append("issueDate", formData.issueDate); // Append the privacy to the form data
+        form.append("paidDate", formData.paidDate); // Append the privacy to the form data
+        form.append("dueDate", formData.dueDate); // Append the privacy to the form data
+        form.append("status", formData.status); // Append the privacy to the form data
+        form.append("items", formData.items); // Append the privacy to the form data
 
         try {
-            // setLoading(true);
-            const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/v1/invoice/create-invoice`, formData,
+            const response = await axios.post(
+                `${import.meta.env.VITE_BASE_URL}/api/v1/invoice/create-invoice`, 
+                form,
                 {
                     headers: {
-                        "Content-Type": "multipart/form-data", // Telling Axios we are sending form data
+                        "Content-Type": "multipart/form-data",
                     },
-                    // withCredentials: true, // Include credentials (cookies) with the request
                 }
             );
-            if(response.status === 200)
-            showAlert("Video uploaded successfully!", 'success');
+
+            if(response.status >= 200 && response.status < 300){
+                showAlert(response.data.message);
+            } 
            
         } catch (error) {
-            // const errorMessage = handleAxiosError(error);
-            showAlert("Error uploading video:" || error,'error');
-        } finally {
-            // setLoading(false);
+            showAlert(error.response.data.message || error.message);
         }
     };
 
     const handleInputChange = (event) => {
         const { name, value, files } = event.target;
-
         if (name === 'customerLogo' && files) {
-
             setFormData((prevData) => ({
                 ...prevData,
                 companyLogo: files[0],
             }));
         } else {
-
             setFormData((prevData) => ({
                 ...prevData,
                 [name]: value,
@@ -150,7 +127,7 @@ const InvoicePreview = () => {
     const addNewItem = () => {
         setFormData({
             ...formData,
-            items: [...formData.items, { description: "", quantity: 0, rate: 0 }],
+            items: [...formData.items, { description: "", quantity: "", rate: "" }],
         });
     };
 
@@ -242,10 +219,6 @@ const InvoicePreview = () => {
                             </span>
                         </div>
 
-
-
-
-
                         <textarea
                             name="notes"
                             value={formData.notes}
@@ -271,6 +244,7 @@ const InvoicePreview = () => {
                                 }
                                 className="p-2 border bg-white rounded"
                             />
+
                             <input
                                 type="number"
                                 placeholder="Quantity"
@@ -280,6 +254,7 @@ const InvoicePreview = () => {
                                 }
                                 className="p-2 border bg-white rounded"
                             />
+
                             <input
                                 type="number"
                                 placeholder="Rate"
@@ -287,6 +262,7 @@ const InvoicePreview = () => {
                                 onChange={(e) => handleItemChange(index, "rate", e.target.value)}
                                 className="p-2 border bg-white rounded"
                             />
+                            
                         </div>
                     ))}
                     <button
@@ -379,8 +355,6 @@ const InvoicePreview = () => {
                         <p className="text-sm sm:text-base">{formData.notes}</p>
                     </section>
                 </div>
-
-
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-end mt-4 p-2 gap-2">

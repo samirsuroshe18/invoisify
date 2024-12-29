@@ -12,20 +12,20 @@ const InvoicePreview = () => {
 
     const componentRef = useRef();
     const [formData, setFormData] = useState({
-        companyName: "Tanishq Jewellers",
-        companyEmail: "tanishq@gmail.com ",
-        companyAddress: "Dombivli",
+        companyName: "",
+        companyEmail: "",
+        companyAddress: "",
         companyLogo: "",
         customerName: "",
         customerAddress: "",
-        additionalNotes: "test",
+        additionalNotes: "",
         totalAmount: 0,
         issueDate: new Date().toISOString().split("T")[0],
         paidDate: "2024-12-10",
         dueDate: new Date().toISOString().split("T")[0],
-        status: "Pending",
+        status: "",
         items: [
-            { description: "hahahh", quantity: 1, rate: 1 },
+            { description: "", quantity: 1, rate: 1 },
 
         ],
     });
@@ -83,19 +83,19 @@ const InvoicePreview = () => {
         }
 
         const form = new FormData();
-        form.append("companyLogo", formData.companyLogo); // Append the video file to the form data
-        form.append("companyName", formData.companyName); // Append the title to the form data
-        form.append("companyEmail", formData.companyEmail); // Append the description to the form data
-        form.append("companyAddress", formData.companyAddress); // Append the tags to the form data
-        form.append("customerName", formData.customerName); // Append the category to the form data
-        form.append("customerAddress", formData.customerAddress); // Append the privacy to the form data 
-        form.append("additionalNotes", formData.additionalNotes); // Append the privacy to the form data
-        form.append("totalAmount", formData.totalAmount); // Append the privacy to the form data
-        form.append("issueDate", formData.issueDate); // Append the privacy to the form data
-        form.append("paidDate", formData.paidDate); // Append the privacy to the form data
-        form.append("dueDate", formData.dueDate); // Append the privacy to the form data
-        form.append("status", formData.status); // Append the privacy to the form data
-        form.append("items", formData.items); // Append the privacy to the form data
+        form.append("companyLogo", formData.companyLogo); 
+        form.append("companyName", formData.companyName); 
+        form.append("companyEmail", formData.companyEmail); 
+        form.append("companyAddress", formData.companyAddress); 
+        form.append("customerName", formData.customerName); 
+        form.append("customerAddress", formData.customerAddress); 
+        form.append("additionalNotes", formData.additionalNotes); 
+        form.append("totalAmount", formData.totalAmount); 
+        form.append("issueDate", formData.issueDate); 
+        form.append("paidDate", formData.paidDate);
+        form.append("dueDate", formData.dueDate); 
+        form.append("status", formData.status); 
+        form.append("items", formData.items); 
 
         try {
             // setLoading(true);

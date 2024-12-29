@@ -2,19 +2,28 @@ import React, { useState, useRef } from "react";
 import html2pdf from "html2pdf.js";
 import logo from "../assets/invoisify.png";
 import Navbar from "../components/Navbar";
+import axios from "axios";
 
 const InvoicePreview = () => {
+
+
+
     const componentRef = useRef();
     const [formData, setFormData] = useState({
-        companyName: "",
-        companyLogo: "",
-        address: "",
-        email: "",
-        customerName: "",
-        customerAddress: "",
-        notes: "Thank you for your business!",
+        companyName : "mohit",
+        companyEmail:"www.mohit.com",
+        companyAddress :"www",
+        companyLogo:"ww",
+        customerName: "ww",
+        customerAddress: "www",
+        additionalNotes: "ww",
+        totalAmount: 0,
+        issueDate: new Date().toISOString().split("T")[0],
+        paidDate: new Date().toISOString().split("T")[0],
+        dueDate: new Date().toISOString().split("T")[0],
+        status: "Pending",
         items: [
-            { description: "", quantity: 0, rate: 0 },
+            { description: "rerer", quantity: 1, rate: 1 },
             
         ],
     });
@@ -35,6 +44,16 @@ const InvoicePreview = () => {
                 .catch((error) => console.error("PDF generation error:", error));
         } else {
             console.error("componentRef is null or undefined");
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/v1/invoice/create-invoice`, formData);
+            console.log('Invoice created successfully:', response.data);
+        } catch (error) {
+            console.error('Error creating invoice:', error);
         }
     };
 
@@ -127,6 +146,24 @@ const InvoicePreview = () => {
                                 type="file"
                                 id="customerLogo"
                                 name="customerLogo"
+                                onChange={handleInputChange}
+                                className="hidden"
+                            />
+                            <span className="ml-4 text-gray-600">
+                                {formData.companyLogo ? formData.companyLogo.name : 'No file chosen'}
+                            </span>
+                        </div>
+                        <div className="flex items-center">
+                            <label
+                                htmlFor="dueDate"
+                                className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                            >
+                                Due Date
+                            </label>
+                            <input
+                                type="date"
+                                id="dueDate"
+                                name="dueDate"
                                 onChange={handleInputChange}
                                 className="hidden"
                             />
@@ -268,7 +305,7 @@ const InvoicePreview = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-end mt-4 p-2 gap-2">
-                    <button className="bg-green-500 text-white font-bold py-2 px-4 sm:px-8 rounded hover:bg-green-600 transition-all duration-150">
+                    <button className="bg-green-500 text-white font-bold py-2 px-4 sm:px-8 rounded hover:bg-green-600 transition-all duration-150" onClick={handleSubmit}>
                         Save
                     </button>
                     <button

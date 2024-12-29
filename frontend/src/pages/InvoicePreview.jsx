@@ -7,6 +7,7 @@ const InvoicePreview = () => {
     const componentRef = useRef();
     const [formData, setFormData] = useState({
         companyName: "",
+        companyLogo: "",
         address: "",
         email: "",
         customerName: "",
@@ -14,7 +15,7 @@ const InvoicePreview = () => {
         notes: "Thank you for your business!",
         items: [
             { description: "", quantity: 0, rate: 0 },
-            { description: "", quantity: 0, rate: 0 },
+            
         ],
     });
 
@@ -59,7 +60,7 @@ const InvoicePreview = () => {
 
     return (
         <>
-            <Navbar activePage="Invoices"/>
+            <Navbar activePage="Invoices" />
             <main className="p-5 max-w-5xl mx-auto">
                 {/* Editable Form */}
                 <section className="mb-6 bg-gray-100 p-5 rounded-lg">
@@ -71,7 +72,7 @@ const InvoicePreview = () => {
                             value={formData.companyName}
                             onChange={handleInputChange}
                             placeholder="Company Name"
-                            className="p-2 border rounded"
+                            className="p-2 border bg-white rounded"
                         />
                         <input
                             type="text"
@@ -79,7 +80,7 @@ const InvoicePreview = () => {
                             value={formData.address}
                             onChange={handleInputChange}
                             placeholder="Company Address"
-                            className="p-2 border rounded"
+                            className="p-2 border rounded bg-white"
                         />
                         <input
                             type="email"
@@ -87,7 +88,7 @@ const InvoicePreview = () => {
                             value={formData.email}
                             onChange={handleInputChange}
                             placeholder="Company Email"
-                            className="p-2 border rounded"
+                            className="p-2 border rounded bg-white"
                         />
                         <input
                             type="text"
@@ -95,7 +96,7 @@ const InvoicePreview = () => {
                             value={formData.customerName}
                             onChange={handleInputChange}
                             placeholder="Customer Name"
-                            className="p-2 border rounded"
+                            className="p-2 border rounded bg-white"
                         />
                         <input
                             type="text"
@@ -103,14 +104,35 @@ const InvoicePreview = () => {
                             value={formData.customerAddress}
                             onChange={handleInputChange}
                             placeholder="Customer Address"
-                            className="p-2 border rounded"
+                            className="p-2 border rounded bg-white"
                         />
+
+                        <div className="flex items-center">
+                            <label
+                                htmlFor="customerLogo"
+                                className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                            >
+                                Choose Logo
+                            </label>
+                            <input
+                                type="file"
+                                id="customerLogo"
+                                name="customerLogo"
+                                onChange={handleInputChange}
+                                className="hidden"
+                            />
+                            <span className="ml-4 text-gray-600">
+                                {formData.companyLogo ? formData.companyLogo.name : 'No file chosen'}
+                            </span>
+                        </div>
+
+
                         <textarea
                             name="notes"
                             value={formData.notes}
                             onChange={handleInputChange}
                             placeholder="Remarks"
-                            className="p-2 border rounded col-span-1 sm:col-span-2"
+                            className="p-2 border rounded col-span-1 bg-white sm:col-span-2"
                         />
                     </div>
                 </section>
@@ -119,8 +141,8 @@ const InvoicePreview = () => {
                 <div className="mt-4 bg-gray-100 p-5 rounded-lg mb-6">
                     <h2 className="text-lg font-semibold mb-4">Add New Item</h2>
                     {formData.items.map((item, index) => (
-                        <div key={index} className="grid grid-cols-4 gap-4 mb-2">
-                            
+                        <div key={index} className="grid grid-cols-4  gap-4 mb-2">
+
                             <input
                                 type="text"
                                 placeholder="Description"
@@ -128,7 +150,7 @@ const InvoicePreview = () => {
                                 onChange={(e) =>
                                     handleItemChange(index, "description", e.target.value)
                                 }
-                                className="p-2 border rounded"
+                                className="p-2 border bg-white rounded"
                             />
                             <input
                                 type="number"
@@ -137,14 +159,14 @@ const InvoicePreview = () => {
                                 onChange={(e) =>
                                     handleItemChange(index, "quantity", e.target.value)
                                 }
-                                className="p-2 border rounded"
+                                className="p-2 border bg-white rounded"
                             />
                             <input
                                 type="number"
                                 placeholder="Rate"
                                 value={item.rate}
                                 onChange={(e) => handleItemChange(index, "rate", e.target.value)}
-                                className="p-2 border rounded"
+                                className="p-2 border bg-white rounded"
                             />
                         </div>
                     ))}
@@ -155,11 +177,11 @@ const InvoicePreview = () => {
                         Add New Row
                     </button>
                     <button
-                            className="bg-red-500 text-white font-bold py-2 px-4 sm:px-8 rounded hover:bg-red-600 transition-all duration-150 ml-4 mt-4"
-                            onClick={clearAllItems}
-                        >
-                            Clear All Items
-                        </button>
+                        className="bg-red-500 text-white font-bold py-2 px-4 sm:px-8 rounded hover:bg-red-600 transition-all duration-150 ml-4 mt-4"
+                        onClick={clearAllItems}
+                    >
+                        Clear All Items
+                    </button>
                 </div>
 
                 {/* Invoice Preview */}
@@ -172,6 +194,7 @@ const InvoicePreview = () => {
                             src={logo}
                             alt="Company Logo"
                             className="mx-auto mb-2 h-24 sm:w-32 sm:h-32"
+
                         />
                         <h1 className="text-xl sm:text-2xl font-bold">{formData.companyName}</h1>
                         <p className="text-sm sm:text-base">{formData.address}</p>

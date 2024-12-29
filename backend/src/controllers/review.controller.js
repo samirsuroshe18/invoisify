@@ -13,6 +13,7 @@ export const createReview = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'User ID, Product ID, and Rating are required');
     }
 
+
     const review = await Review.create({
         name,
         rating: Number(rating),

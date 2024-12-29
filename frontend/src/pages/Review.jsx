@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import Navbar from '../components/Navbar';
 import { FaUser, FaCommentDots, FaStar } from 'react-icons/fa';
-
+import { useAlert } from '../hooks/useAlert';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 
@@ -9,17 +9,18 @@ const Reviews = () => {
 
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
+  const [AlertComponent, showAlert] = useAlert();
 
   const handleReviewSubmit = async (event) => {
     event.preventDefault();
-    const { name, rating, comment } = event.target.elements;
+    const { name, comment } = event.target.elements;
     try {
       await axios.post(`${import.meta.env.VITE_BASE_URL}/api/v1/review/create-review`, {
         name: name.value,
         rating,
         comment: comment.value,
       });
-      alert('Review submitted successfully');
+      showAlert('Review submitted successfully', 'success');
     } catch (error) {
       console.error('There was an error submitting the review!', error);
     }
@@ -28,6 +29,7 @@ const Reviews = () => {
   return (
     <>
       <Navbar activePage="Reviews" />
+      <AlertComponent/>
       <div className="min-h-screen bg-gradient-to-r from-blue-100 via-white to-purple-100 py-12">
 
         <div className="max-w-4xl mx-auto px-6">
@@ -58,7 +60,7 @@ const Reviews = () => {
               id="name"
               name="name"
               required
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-white focus:ring-blue-600 focus:bg-white"
             />
 
             <div className="flex items-center gap-3">
@@ -72,8 +74,8 @@ const Reviews = () => {
                 <FaStar
                   key={value}
                   size={30}
-                  name="rating" // Added name attribute
-                  id={`rating`}
+                  name="rating" 
+                  id='rating'
                   className={`cursor-pointer ${(hover || rating) >= value ? "text-yellow-500" : "text-gray-400"
                     }`}
                   onClick={() => setRating(value)}
@@ -96,7 +98,7 @@ const Reviews = () => {
               name="comment"
               required
               rows="4"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-white focus:bg-white focus:ring-blue-600"
             ></textarea>
 
             {/* Submit Button */}

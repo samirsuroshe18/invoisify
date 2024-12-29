@@ -4,10 +4,16 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'alert-info',
+    'alert-success',
+    'alert-warning',
+    'alert-error',
+  ],
   theme: {
     extend: {
       fontFamily: {
-        inknut: ['"Inknut Antiqua"', 'serif'], 
+        inknut: ['"Inknut Antiqua"', 'serif'],
       },
     },
   },

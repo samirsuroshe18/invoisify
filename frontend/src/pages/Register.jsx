@@ -41,11 +41,11 @@ const Register = () => {
                     withCredentials: true
                 }
             );
-            alert(response.data.message);
+            showAlert(response.data.message, 'success');
             navigate("/login");
             dispatch(login(response.data.data));
         } catch (error) {
-            alert(error.response?.data.message || error.message);
+            showAlert(error.response?.data.message || error.message, 'error');
         }
     };
 
@@ -63,11 +63,11 @@ const Register = () => {
                     withCredentials: true,
                 }
             );
-            alert(response.data.message);
+            showAlert(response.data.message,'warning');
             dispatch(login(response.data.data));
             navigate("/dashboard");
         } catch (error) {
-            alert(error.response?.data.message || error.message);
+            showAlert(error.response?.data.message || error.message,'error');
         }
     };
 
@@ -78,7 +78,7 @@ const Register = () => {
     };
 
     const handleError = (error) => {
-        alert('Google Login Error:', error.message);
+        showAlert('Google Login Error:'|| error.message,'error');
     };
 
     return (

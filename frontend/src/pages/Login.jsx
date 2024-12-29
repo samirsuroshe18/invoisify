@@ -35,11 +35,13 @@ const Login = () => {
               withCredentials: true
             }
         );
-        alert(response.data.message);
+        showAlert(response.data.message, 'success');
         dispatch(login(response.data.data));
-        navigate("/dashboard");
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 3000);
     } catch (error) {
-        alert(error.response?.data.message || error.message);
+        showAlert(error.response?.data.message || error.message, 'error');
     }
 };
 
@@ -57,11 +59,11 @@ const Login = () => {
           withCredentials: true,
         }
       );
-      alert(response.data.message);
+      showAlert(response.data.message, 'success');
       dispatch(login(response.data.data));
       navigate("/dashboard");
     } catch (error) {
-      alert(error.response?.data.message || error.message);
+      showAlert(error.response?.data.message || error.message, 'error');
     }
   };
 
@@ -72,21 +74,22 @@ const Login = () => {
   };
 
   const handleError = (error) => {
-    alert('Google Login Error:', error.message);
+    showAlert('Google Login Error:', error.message,'error');
   };
 
   return (
     <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
-      <Card style={{ width: '400px' }} className="p-4 shadow-lg">
+      <AlertComponent/>
+      <Card style={{ width: '400px' }} className="p-4 shadow-lg bg-white">
         <h3 className="text-center mb-4">Login</h3>
         
         <Form onSubmit={loginUser}>
-          <Form.Group controlId="formBasicEmail">
+          <Form.Group controlId="formBasicEmail" className='focus:bg-white'>
             <Form.Label>Email address</Form.Label>
             <Form.Control type="email" placeholder="Enter email" required onChange={(e)=>setEmail(e.target.value)}/>
           </Form.Group>
 
-          <Form.Group controlId="formBasicPassword">
+          <Form.Group controlId="formBasicPassword" className='focus:bg-white'>
             <Form.Label>Password</Form.Label>
             <Form.Control type="password" placeholder="Password" required onChange={(e)=>setPassword(e.target.value)}/>
           </Form.Group>

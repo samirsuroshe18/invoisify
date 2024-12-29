@@ -14,7 +14,7 @@ import InvoiceMaker from "../pages/InvoiceMaker.jsx";
 import InvoicePreview from "../pages/InvoicePreview.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
 import Features from "../components/Features.jsx";
-import Contact from "../pages/Contact.jsx";
+import Review from "../pages/Review.jsx";
   
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -30,7 +30,7 @@ const router = createBrowserRouter(
       <Route path="/invoice-preview" element={<InvoicePreview />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/features" element={<Features/>} />
-      <Route path="/contact" element={<Contact/>} />
+      <Route path="/review" element={<Review/>} />
       <Route path="*" element={<NotFound />} />
     </>
   )

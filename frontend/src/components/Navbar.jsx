@@ -5,7 +5,7 @@ import axios from 'axios';
 
 const Navbar = ({ activePage }) => {
   const userData = useSelector(state => state.auth);
-  console.log('userData navbar', userData);
+  //console.log('userData navbar', userData);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   
@@ -27,7 +27,7 @@ const Navbar = ({ activePage }) => {
     { name: 'Home', href: '/' },
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Invoices', href: '/invoice-preview' },
-    { name: 'Contact', href: '/login' },
+    { name: 'Reviews', href: '/review' },
   ];
 
   return (
@@ -133,7 +133,7 @@ const Navbar = ({ activePage }) => {
           {userData &&
             <li className="px-4 py-2 no-underline">
               <button
-                className="block w-full text-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow hover:bg-blue-600 transition"
+                className="block w-full text-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow hover:bg-blue-600 no-underline transition"
                 onClick={logoutUser}
               >
                 Logout

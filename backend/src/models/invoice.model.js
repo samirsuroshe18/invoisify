@@ -1,44 +1,82 @@
-import mongoose from "mongoose";
-import { Schema } from "mongoose";
+import mongoose, {Schema} from 'mongoose';
 
-const invoiceSchema = new Schema({
-    companyName: {
+const itemSchema = new Schema({
+    description: { 
         type: String,
-        required: true,
-        
-    },
-    logo : {
-        type: String,
-        required: true,
-    },
-    address : {
-        type: String,
-        required: true,
-    },
-    totalAmount : {
-        type: String,
-        required: true,
-    },
-    customerName : {
-        type: String,
-        required: true,
-    },
-    issueDate : {
-        type: String,
-        required: true,
-    },
-    dueDate : {
-        type: String,
-        required: true,
-    },
-    paidDate : {
-        type: String,
-    },
-    status : {
-        type: String,
-        required: true,
     },
 
-}, { timestamps: true });
+    quantity: { 
+        type: Number,
+    },
 
-export  const Invoice = mongoose.model("Invoice", invoiceSchema);
+    rate: { 
+        type: Number,
+    },
+});
+
+const invoiceSchema = new mongoose.Schema({
+    companyName: { 
+        type: String, 
+    },
+
+    companyEmail: { 
+        type: String, 
+        required: false 
+    },
+
+    companyAddress: { 
+        type: String, 
+        required: true 
+    },
+
+    companyLogo: { 
+        type: String, 
+        required: true 
+    },
+
+    customerName: { 
+        type: String, 
+        required: true 
+    },
+
+    customerAddress: { 
+        type: String, 
+        required: false 
+    },
+
+    additionalNotes: { 
+        type: String, 
+    },
+
+    totalAmount: { 
+        type: Number, 
+        required: true 
+    },
+
+    issueDate: { 
+        type: Date, 
+        required: true 
+    },
+
+    paidDate: { 
+        type: Date,
+    },
+
+    dueDate: { 
+        type: Date, 
+        required: true 
+    },
+
+    status: { 
+        type: String, 
+        enum: ['pending', 'sent', 'paid', 'completed'],
+        default: 'pending',
+    },
+
+    items: [itemSchema],
+
+}, { timestamps: true } );
+
+export const Invoice = mongoose.model("Invoice", invoiceSchema);
+
+

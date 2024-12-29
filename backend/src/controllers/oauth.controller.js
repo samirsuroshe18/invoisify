@@ -72,6 +72,7 @@ const googleLogin = asyncHandler(async (req, res) => {
                 password: 1,
                 isVerified: 1,
             }
+            
         },
         { new: true }
     ).select("-password")

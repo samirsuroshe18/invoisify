@@ -5,7 +5,7 @@ import axios from 'axios';
 
 const Navbar = ({ activePage }) => {
   const userData = useSelector(state => state.auth);
-  console.log('userData navbar', userData);
+  //console.log('userData navbar', userData);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   

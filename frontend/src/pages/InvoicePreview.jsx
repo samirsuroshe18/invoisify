@@ -20,13 +20,22 @@ const InvoicePreview = () => {
     });
 
     const generateAndSavePDF = () => {
+        console.log("Attempting to generate PDF");
         const options = {
             filename: `${formData.customerName}_invoice.pdf`,
             html2canvas: { scale: 2 },
             jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
         };
 
-        html2pdf().from(componentRef.current).set(options).save();
+        if (componentRef.current) {
+            html2pdf()
+                .from(componentRef.current)
+                .set(options)
+                .save()
+                .catch((error) => console.error("PDF generation error:", error));
+        } else {
+            console.error("componentRef is null or undefined");
+        }
     };
 
     const handleInputChange = (e) => {

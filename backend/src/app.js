@@ -29,6 +29,7 @@ import emailRouter from "./routes/email.routes.js";
 import invoiceRouter from "./routes/invoice.routes.js";
 import templateRouter from "./routes/template.routes.js";
 import reviewRouter from "./routes/review.routes.js";
+import historyRouter from "./routes/history.routes.js";
 
 //routes declaration
 app.use("/api/v1/user", userRouter);
@@ -37,6 +38,7 @@ app.use("/api/v1/email", emailRouter);
 app.use("/api/v1/invoice", invoiceRouter);
 app.use("/api/v1/template", templateRouter);
 app.use("/api/v1/review", reviewRouter);
+app.use('/api/v1/history', historyRouter); 
 app.use(errorHandler);
 
 

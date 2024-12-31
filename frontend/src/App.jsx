@@ -14,30 +14,30 @@ function App() {
   const dispatch = useDispatch();
   const [AlertComponent, showAlert] = useAlert();
 
-  useEffect(() => {
-    axios
-      .get(
-        `${import.meta.env.VITE_BASE_URL}/api/v1/user/get-current-user`,
-        {
-          withCredentials: true,
-        }
-      )
-      .then((response) => {
-        console.log(response.data.data);
-        dispatch(login(response.data.data));
-        showAlert(response.data.message, 'success');
-        setIsLoggedIn(true);
-      })
-      .catch((error) => {
-        console.log(error);
-        showAlert(error?.response?.data.message || error.message, 'error');
-        setIsLoggedIn(false);
-        navigate("/login");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+  // useEffect(() => {
+  //   axios
+  //     .get(
+  //       `${import.meta.env.VITE_BASE_URL}/api/v1/user/get-current-user`,
+  //       {
+  //         withCredentials: true,
+  //       }
+  //     )
+  //     .then((response) => {
+  //       console.log(response.data.data);
+  //       dispatch(login(response.data.data));
+  //       showAlert(response.data.message, 'success');
+  //       setIsLoggedIn(true);
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //       showAlert(error?.response?.data.message || error.message, 'error');
+  //       setIsLoggedIn(false);
+  //       navigate("/login");
+  //     })
+  //     .finally(() => {
+  //       setLoading(false);
+  //     });
+  // }, []);
 
   return (
     <>

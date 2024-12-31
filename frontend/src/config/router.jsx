@@ -15,6 +15,7 @@ import InvoicePreview from "../pages/InvoicePreview.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
 import Features from "../components/Features.jsx";
 import Review from "../pages/Review.jsx";
+import History from "../pages/History.jsx";
   
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -31,6 +32,7 @@ const router = createBrowserRouter(
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/features" element={<Features/>} />
       <Route path="/review" element={<Review/>} />
+      <Route path="/history" element = {<History/>} />
       <Route path="*" element={<NotFound />} />
     </>
   )

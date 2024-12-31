@@ -28,6 +28,7 @@ const Navbar = ({ activePage }) => {
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Invoices', href: '/invoice-preview' },
     { name: 'Reviews', href: '/review' },
+    { name: 'History', href: '/history'},
   ];
 
   return (

@@ -5,27 +5,27 @@ import { Link } from 'react-router-dom';
 const Footer = () => {
   return (
     <div>
-        <footer className="footer footer-center bg-base-200 text-base-content p-10">
-  <nav className="grid grid-flow-col gap-4">
-    <Link className="link link-hover">About us</Link>
-    <Link className="link link-hover">Contact</Link>
-    <Link className="link link-hover">Jobs</Link>
-    <Link className="link link-hover">Press kit</Link>
+        <footer className="bg-gray-800 text-white p-4"> 
+  <nav className="flex items-center justify-center gap-12">
+    <Link className="no-underline text-md hover:underline">About us</Link>
+    <Link className="no-underline text-md hover:underline">Contact</Link>
+    <Link className="no-underline text-md hover:underline">Jobs</Link>
+    <Link className="no-underline text-md hover:underline">Press kit</Link>
   </nav>
   <nav>
-    <div className="grid grid-flow-col gap-4">
-      <a>
-        <FaGlobeAmericas className='h-6 w-12'/>
-      </a>
-      <a>
-        <FaInstagram className='h-6 w-12'/>
-      </a>
-      <a>
-        <FaDiscord className='h-6 w-12'/>
-      </a>
+    <div className="flex items-center justify-center  gap-12 py-4">
+      <Link>
+        <FaGlobeAmericas className='h-6 w-12 text-white'/>
+      </Link>
+      <Link>
+        <FaInstagram className='h-6 w-12 text-white'/>
+      </Link>
+      <Link>
+        <FaDiscord className='h-6 w-12 text-white'/>
+      </Link>
     </div>
   </nav>
-  <aside>
+  <aside className='text-center'>
     <p>Copyright © {new Date().getFullYear()} - All right reserved by Tech Forge</p>
   </aside>
 </footer>

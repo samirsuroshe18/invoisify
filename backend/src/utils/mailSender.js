@@ -13,8 +13,7 @@ async function mailSender(email, userId, emailType) {
     } else if (emailType === "RESET") {
       await User.findByIdAndUpdate(userId, { forgotPasswordToken: hashedToken, forgotPasswordTokenExpiry: Date.now() + (1000 * 60 * 10) });
     }
-
-
+    
     // Create a Transporter to send emails
     let transporter = createTransport({
       host: process.env.MAIL_HOST,

@@ -1,7 +1,7 @@
 import { Invoice } from '../models/invoice.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import ApiError from '../utils/ApiError.js';
-import asyncHandler from '../utils/asyncHandler.js';
+import asyncHandler from '../utils/asynchandler.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 
 const createInvoice = asyncHandler(async (req, res) => {

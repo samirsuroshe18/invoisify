@@ -76,7 +76,8 @@ const InvoicePreview = () => {
         form.append("paidDate", formData.paidDate); // Append the privacy to the form data
         form.append("dueDate", formData.dueDate); // Append the privacy to the form data
         form.append("status", formData.status); // Append the privacy to the form data
-        form.append("items", formData.items); // Append the privacy to the form data
+        
+        form.append("items", JSON.stringify(formData.items)); // Append the privacy to the form data
 
         try {
             const response = await axios.post(

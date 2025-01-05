@@ -4,23 +4,22 @@ import { useSelector } from 'react-redux';
 import axios from 'axios';
 
 const Navbar = ({ activePage }) => {
-  const userData = useSelector(state => state.auth);
-  //console.log('userData navbar', userData);
+  const userData = useSelector((state) => state.auth);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  
+
   const logoutUser = () => {
     axios
-    .get(`${import.meta.env.VITE_BASE_URL}/api/v1/user/logout`, {
-      withCredentials: true,
-    })
-    .then((response) => {
-      alert(response.data.message);
-      navigate('/login');
-    })
-    .catch((error) => {
-      alert(error?.response?.data.message || error.message);
-    })
+      .get(`${import.meta.env.VITE_BASE_URL}/api/v1/user/logout`, {
+        withCredentials: true,
+      })
+      .then((response) => {
+        alert(response.data.message);
+        navigate('/login');
+      })
+      .catch((error) => {
+        alert(error?.response?.data.message || error.message);
+      });
   };
 
   const navItems = [
@@ -28,12 +27,11 @@ const Navbar = ({ activePage }) => {
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Invoices', href: '/invoice-preview' },
     { name: 'Reviews', href: '/review' },
-    { name: 'History', href: '/history'},
+    { name: 'History', href: '/history' },
   ];
 
   return (
-    <nav className="relative px-6  flex justify-between items-center bg-white shadow-md">
-
+    <nav className="sticky top-0 z-50 px-6 flex justify-between items-center bg-white shadow-md">
       <div className="flex items-center ml-4">
         <Link to="" className="flex items-center no-underline">
           <img
@@ -47,7 +45,8 @@ const Navbar = ({ activePage }) => {
         </Link>
       </div>
 
-      <button className="lg:hidden text-gray-800 focus:outline-none"
+      <button
+        className="lg:hidden text-gray-800 focus:outline-none"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         aria-label="Toggle Menu"
       >
@@ -68,10 +67,10 @@ const Navbar = ({ activePage }) => {
       </button>
 
       {/* Desktop Menu */}
-      <ul className="hidden lg:flex space-x-6  items-center mt-2">
+      <ul className="hidden lg:flex space-x-6 items-center mt-2">
         {navItems.map((item) => (
           <li key={item.name}>
-            <Link 
+            <Link
               to={item.href}
               className={`${
                 activePage === item.name ? 'text-blue-500' : 'text-gray-600'
@@ -81,31 +80,29 @@ const Navbar = ({ activePage }) => {
             </Link>
           </li>
         ))}
-        
-        {!userData &&
+
+        {!userData && (
           <li>
-          <Link
-            to="/register"
-            className="ml-4 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow no-underline hover:bg-blue-600 transition"
-          >
-            Signup
-          </Link>
-        </li>}
-
-        {userData &&
-            <li className="px-4 py-2 no-underline">
-              <button
-                className="block w-full text-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow hover:bg-blue-600 no-underline transition"
-                onClick={logoutUser}
-              >
-                Logout
-              </button>
+            <Link
+              to="/register"
+              className="ml-4 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow no-underline hover:bg-blue-600 transition"
+            >
+              Signup
+            </Link>
           </li>
-          }
+        )}
 
+        {userData && (
+          <li className="px-4 py-2 no-underline">
+            <button
+              className="block w-full text-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow hover:bg-blue-600 no-underline transition"
+              onClick={logoutUser}
+            >
+              Logout
+            </button>
+          </li>
+        )}
       </ul>
-
-
 
       {isMenuOpen && (
         <ul className="absolute top-12 left-0 w-full bg-white shadow-lg lg:hidden">
@@ -113,7 +110,7 @@ const Navbar = ({ activePage }) => {
             <li key={item.name} className="border-b no-underline">
               <Link
                 to={item.href}
-                className={`block px-4 no- py-2 no-underline ${
+                className={`block px-4 py-2 no-underline ${
                   activePage === item.name ? 'text-blue-500' : 'text-gray-800'
                 } text-sm font-medium hover:text-blue-400 transition`}
               >
@@ -121,17 +118,16 @@ const Navbar = ({ activePage }) => {
               </Link>
             </li>
           ))}
-          {!userData && 
-          <li className="px-4 py-2 no-underline">
-            <Link to="/register">
-              <button
-                className="block w-full text-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow hover:bg-blue-600 transition"
-              >
-                Signup
-              </button>
-            </Link>
-          </li>}
-          {userData &&
+          {!userData && (
+            <li className="px-4 py-2 no-underline">
+              <Link to="/register">
+                <button className="block w-full text-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow hover:bg-blue-600 transition">
+                  Signup
+                </button>
+              </Link>
+            </li>
+          )}
+          {userData && (
             <li className="px-4 py-2 no-underline">
               <button
                 className="block w-full text-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md shadow hover:bg-blue-600 no-underline transition"
@@ -139,8 +135,8 @@ const Navbar = ({ activePage }) => {
               >
                 Logout
               </button>
-          </li>
-          }
+            </li>
+          )}
         </ul>
       )}
     </nav>

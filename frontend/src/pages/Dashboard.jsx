@@ -7,7 +7,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import Navbar from '../components/Navbar';
 
 const Dashboard = () => {
-    const user = useSelector(state => state.auth?.userData);
+    const user = useSelector(state => state.auth);
     console.log('userData dashboard', user);
 
     // Dummy data (Replace with backend data)

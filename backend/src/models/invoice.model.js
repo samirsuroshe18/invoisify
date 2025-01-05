@@ -14,7 +14,13 @@ const itemSchema = new Schema({
     },
 });
 
-const invoiceSchema = new mongoose.Schema({
+const invoiceSchema = new Schema({
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
+    
     companyName: { 
         type: String, 
     },

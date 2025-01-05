@@ -1,23 +1,21 @@
+import asyncHandler from "../utils/asynchandler.js";
+import ApiError from "../utils/apiError.js";
+import ApiResponse from "../utils/apiResponse.js";
+import {History} from "../models/history.model.js";
+import { Invoice } from "../models/invoice.model.js";
 
-
-import History from '../models/historyModel';
-
-const getHistory = async (req, res) => {
-    try {
-        
-        const history = await History.find();
+const getHistory = asyncHandler(async (req, res) => {
+        const history = await Invoice.find({createdBy: req.user._id});
 
         if (history.length === 0) {
-            return res.status(404).json({ message: 'No history found' });
+            throw new ApiError(404, 'No history found');
         }
 
-        res.status(200).json({ history });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
-    }
-};
+        return res.status(200).json(
+            new ApiResponse(200, history, 'History retrieved successfully')
+        );
+});
 
-module.exports = {
+export {
     getHistory,
 };

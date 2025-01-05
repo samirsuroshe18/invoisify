@@ -14,10 +14,11 @@ const History = () => {
         const fetchHistory = async () => {
             try {
                 const response = await axios.get(
-                    'http://localhost:3000/api/v1/history'
+                    'http://localhost:3000/api/v1/history/get-history',
+                    { withCredentials: true }
                 );
                 if (response.status >= 200 && response.status < 300) {
-                    setHistoryData(response.data.history); 
+                    setHistoryData(response.data.data); 
                 } else {
                     showAlert('Failed to fetch invoice history');
                 }
@@ -57,15 +58,15 @@ const History = () => {
                         </thead>
                         <tbody>
                             {historyData.map((invoice) => (
-                                <tr key={invoice.id}>
-                                    <td className="border px-2 sm:px-4 py-2">{invoice.id}</td>
-                                    <td className="border px-2 sm:px-4 py-2">{invoice.customerName}</td>
-                                    <td className="border px-2 sm:px-4 py-2 text-right">{invoice.totalAmount}</td>
-                                    <td className="border px-2 sm:px-4 py-2 text-center">{invoice.issueDate}</td>
-                                    <td className="border px-2 sm:px-4 py-2 text-center">{invoice.dueDate}</td>
+                                <tr key={invoice?._id}>
+                                    <td className="border px-2 sm:px-4 py-2">{invoice?._id}</td>
+                                    <td className="border px-2 sm:px-4 py-2">{invoice?.customerName}</td>
+                                    <td className="border px-2 sm:px-4 py-2 text-right">{invoice?.totalAmount}</td>
+                                    <td className="border px-2 sm:px-4 py-2 text-center">{invoice?.issueDate}</td>
+                                    <td className="border px-2 sm:px-4 py-2 text-center">{invoice?.dueDate}</td>
                                     <td className="border px-2 sm:px-4 py-2 text-center">
-                                        <span className={`text-${invoice.status === 'Paid' ? 'green' : 'red'}-500`}>
-                                            {invoice.status}
+                                        <span className={`text-${invoice?.status === 'paid' ? 'green' : 'red'}-500`}>
+                                            {invoice?.status}
                                         </span>
                                     </td>
                                 </tr>

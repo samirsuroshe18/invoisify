@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import html2pdf from "html2pdf.js";
 import logo from "../assets/invoisify.png";
 import Navbar from "../components/Navbar";
@@ -27,6 +27,15 @@ const InvoicePreview = () => {
 
         ],
     });
+
+    useEffect(() => {
+        const total = formData.items.reduce(
+            (total, item) => total + item.quantity * item.rate,
+            0
+        );
+        setFormData((prevData) => ({ ...prevData, totalAmount: total }));
+    }, [formData.items]);
+    
 
     const formatDate = (isoDate, separator = " ") => {
         const [year, month, day] = isoDate.split("-");
@@ -81,14 +90,16 @@ const InvoicePreview = () => {
 
         try {
             const response = await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/api/v1/invoice/create-invoice`, 
+                `${import.meta.env.VITE_BASE_URL}/api/v1/invoice/create-invoice`,
                 form,
                 {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
+                    withCredentials: true, // Moved to the correct position inside the config object
                 }
             );
+            
 
             if(response.status >= 200 && response.status < 300){
                 showAlert(response.data.message);
@@ -344,7 +355,7 @@ const InvoicePreview = () => {
                                         Total
                                     </td>
                                     <td className="border px-2 sm:px-4 py-2 text-right font-bold">
-                                        {calculateTotal()}
+                                        {formData.totalAmount}
                                     </td>
                                 </tr>
                             </tfoot>

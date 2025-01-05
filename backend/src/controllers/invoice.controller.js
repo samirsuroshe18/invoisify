@@ -18,6 +18,7 @@ const createInvoice = asyncHandler(async (req, res) => {
         items,
     } = req.body;
     
+    console.log(`totalAmount: ${totalAmount}`);
     const productItems = JSON.parse(items);
 
     if (!Array.isArray(productItems)) {
@@ -33,6 +34,7 @@ const createInvoice = asyncHandler(async (req, res) => {
 
     // Create invoice in the database
     const newInvoice = await Invoice.create({
+        createdBy: req.user._id,
         companyName,
         companyEmail,
         companyAddress,

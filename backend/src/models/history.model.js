@@ -1,7 +1,7 @@
 
-import mongoose from 'mongoose';
+import mongoose, {Schema} from 'mongoose';
 
-const historySchema = new mongoose.Schema({
+const historySchema = new Schema({
     id: { type: String, required: true },
     customerName: { type: String, required: true },
     totalAmount: { type: Number, required: true },
@@ -10,6 +10,4 @@ const historySchema = new mongoose.Schema({
     status: { type: String, required: true },
 });
 
-const History = mongoose.model('History', invoiceSchema);
-
-module.exports = History;
+export const History = mongoose.model("History", historySchema);

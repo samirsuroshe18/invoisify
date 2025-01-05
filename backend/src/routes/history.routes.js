@@ -1,10 +1,9 @@
+import {Router} from 'express';
+import { verifyJwt } from "../middlewares/auth.middleware.js";
+import {getHistory} from '../controllers/history.controller.js';
 
-import express from 'express';
+const router = Router();
 
-const { getHistory } = require('../controllers/historyController');
-const router = express.Router();
+router.route('/get-history').get(verifyJwt, getHistory);
 
-
-router.get('/history', getHistory);
-
-export default REACT_ROUTER_VERSION;
+export default router;

@@ -30,3 +30,9 @@ export const addDays = (day, count) => {
 export const statusOf = (invoice) => (invoice.overdue ? 'overdue' : invoice.status);
 
 export const STATUS_LABELS = { draft: 'Draft', sent: 'Sent', overdue: 'Overdue', paid: 'Paid' };
+
+// "2026-03" as "Mar 2026"
+export const monthLabel = (month) => {
+  const [year, index] = month.split('-').map(Number);
+  return `${MONTHS[index - 1]} ${year}`;
+};

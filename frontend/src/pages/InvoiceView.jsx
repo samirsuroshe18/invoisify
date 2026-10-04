@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { changeStatus, deleteInvoice, duplicateInvoice, getInvoice } from '../api/invoiceApi';
+import { changeStatus, deleteInvoice, duplicateInvoice, getInvoice, sendInvoice, shareInvoice, stopSharing } from '../api/invoiceApi';
 import { errorMessage, statusOf as httpStatus } from '../api/client';
 import InvoiceDocument from '../components/InvoiceDocument';
 import StatusBadge from '../components/StatusBadge';
 import useToast from '../lib/useToast';
+import { downloadPdf } from '../lib/pdf';
 import { localToday } from '../lib/format';
+
+const linkOf = (code) => `${window.location.origin}/i/${code}`;
 
 // One invoice: how it looks, where it stands and what can be done with it
 const InvoiceView = () => {
@@ -21,6 +24,8 @@ const InvoiceView = () => {
   const [busy, setBusy] = useState('');
   const [paying, setPaying] = useState(false);
   const [paidDate, setPaidDate] = useState('');
+  // the address of the public page, once it was asked for
+  const [link, setLink] = useState('');
 
   const load = useCallback(async () => {
     setLoadError('');
@@ -34,6 +39,8 @@ const InvoiceView = () => {
 
   useEffect(() => {
     setInvoice(null);
+    setLink('');
+    setPaying(false);
     load();
   }, [load]);
 
@@ -42,7 +49,7 @@ const InvoiceView = () => {
     setBusy(name);
     try {
       const res = await action();
-      toast.success(res.message);
+      if (res?.message) toast.success(res.message);
       return res;
     } catch (failure) {
       toast.error(failure);
@@ -58,6 +65,7 @@ const InvoiceView = () => {
     if (res) {
       setInvoice(res.data.invoice);
       setPaying(false);
+      if (status === 'draft') setLink('');
     }
   };
 
@@ -68,6 +76,44 @@ const InvoiceView = () => {
   const startPaying = () => {
     setPaidDate(latestPaidDay());
     setPaying(true);
+  };
+
+  const send = async () => {
+    const again = invoice.status === 'sent' ? ' again' : '';
+    if (!window.confirm(`Email invoice ${invoice.number}${again} to ${invoice.customer.email}?`)) return;
+
+    const res = await run('send', () => sendInvoice(id));
+    if (res) {
+      setInvoice(res.data.invoice);
+      setLink(linkOf(res.data.code));
+    }
+  };
+
+  const copyLink = async () => {
+    const code = await run('share', async () => ({ code: await shareInvoice(id) }));
+    if (!code) return;
+
+    const address = linkOf(code.code);
+    setLink(address);
+    setInvoice((current) => ({ ...current, shared: true }));
+
+    try {
+      await navigator.clipboard.writeText(address);
+      toast.success('Link copied');
+    } catch {
+      // the browser did not allow it; the link is shown to be copied by hand
+      toast.success('The link is shown below');
+    }
+  };
+
+  const stop = async () => {
+    if (!window.confirm('Stop sharing? The link your customer has will no longer work.')) return;
+
+    const res = await run('stop', () => stopSharing(id));
+    if (res) {
+      setLink('');
+      setInvoice((current) => ({ ...current, shared: false }));
+    }
   };
 
   const duplicate = async () => {
@@ -85,18 +131,7 @@ const InvoiceView = () => {
   const download = async () => {
     setBusy('pdf');
     try {
-      // the PDF maker is large, so it is fetched only when a PDF is asked for
-      const { default: html2pdf } = await import('html2pdf.js');
-
-      await html2pdf()
-        .from(paper.current)
-        .set({
-          filename: `${invoice.number}.pdf`,
-          margin: 8,
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        })
-        .save();
+      await downloadPdf(paper.current, invoice.number);
     } catch {
       toast.error('The PDF could not be made. Please try again.');
     } finally {
@@ -117,6 +152,7 @@ const InvoiceView = () => {
 
   const { status } = invoice;
   const can = user.isVerified && !busy;
+  const hasAddress = Boolean(invoice.customer.email);
 
   return (
     <div className="space-y-5">
@@ -127,7 +163,12 @@ const InvoiceView = () => {
       </div>
 
       <div className="card p-4 flex flex-wrap gap-2">
-        <button onClick={download} disabled={Boolean(busy)} className="btn-primary">{busy === 'pdf' ? 'Making the PDF…' : 'Download PDF'}</button>
+        {status !== 'paid' && (
+          <button onClick={send} disabled={!can || !hasAddress} title={hasAddress ? undefined : "Add the customer's email address first"} className="btn-primary">
+            {busy === 'send' ? 'Sending…' : (status === 'sent' ? 'Send again' : 'Send by email')}
+          </button>
+        )}
+        <button onClick={download} disabled={Boolean(busy)} className={status === 'paid' ? 'btn-primary' : 'btn-quiet'}>{busy === 'pdf' ? 'Making the PDF…' : 'Download PDF'}</button>
 
         {status === 'draft' && (
           <>
@@ -145,9 +186,29 @@ const InvoiceView = () => {
 
         {status === 'paid' && <button onClick={() => move('sent')} disabled={!can} className="btn-quiet">Mark as unpaid</button>}
 
+        {status !== 'draft' && <button onClick={copyLink} disabled={!can} className="btn-quiet">Copy link</button>}
+        {status !== 'draft' && invoice.shared && <button onClick={stop} disabled={!can} className="btn-quiet">Stop sharing</button>}
+
         <button onClick={duplicate} disabled={!can} className="btn-quiet">Duplicate</button>
         {status !== 'paid' && <button onClick={remove} disabled={!can} className="btn-danger">Delete</button>}
       </div>
+
+      {status !== 'paid' && !hasAddress && (
+        <p className="text-sm text-gray-600">
+          To send this invoice by email, add the customer&apos;s email address{status === 'draft' ? ' (Edit)' : ' (move it back to draft, then Edit)'}.
+        </p>
+      )}
+
+      {link && (
+        <div className="card p-4">
+          <label htmlFor="public-link" className="label">Anyone with this link can see the invoice</label>
+          <input id="public-link" type="text" readOnly value={link} onFocus={(event) => event.target.select()} className="field" />
+        </div>
+      )}
+
+      {!link && invoice.shared && status !== 'draft' && (
+        <p className="text-sm text-gray-600">This invoice has a public link. “Copy link” gives it to you; “Stop sharing” makes it stop working.</p>
+      )}
 
       {paying && (
         <form

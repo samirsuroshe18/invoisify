@@ -11,6 +11,7 @@ import Register from "../pages/Register.jsx";
 import ForgotPassword from "../pages/ForgotPassword.jsx";
 import ResetPassword from "../pages/ResetPassword.jsx";
 import VerifyEmail from "../pages/VerifyEmail.jsx";
+import PublicInvoice from "../pages/PublicInvoice.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
 import Invoices from "../pages/Invoices.jsx";
 import InvoiceEditor from "../pages/InvoiceEditor.jsx";
@@ -25,6 +26,8 @@ const router = createBrowserRouter(
       <Route path="/" element={<Home />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      {/* the page a customer opens from the link of an invoice */}
+      <Route path="/i/:code" element={<PublicInvoice />} />
 
       {/* for visitors who are not logged in */}
       <Route element={<GuestOnly />}>

@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://invoisify-api.onrender.com/api/:path*"
+      "destination": "https://invoisify-5tve.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",

@@ -65,4 +65,10 @@ const writeLimiter = limiter(
     { skip: (req) => skippedInTests() || req.method === 'GET' }
 );
 
-export { loginLimiter, mailLimiter, visitorLimiter, resendLimiter, writeLimiter }
+// the public page of an invoice: generous for a reader, too slow for guessing codes
+const publicLimiter = [
+    limiter(setting('PUBLIC_CONNECTION_RATE_LIMIT', 1200), (req) => `public-connection:${connectionOf(req)}`),
+    limiter(setting('PUBLIC_RATE_LIMIT', 120), (req) => `public:${visitorOf(req)}`),
+];
+
+export { loginLimiter, mailLimiter, visitorLimiter, resendLimiter, writeLimiter, publicLimiter }

@@ -39,7 +39,8 @@ const isOverdue = (invoice, day = today()) => invoice.status === 'sent' && invoi
 const present = (invoice) => {
     const { user, shareCode, isDemo, __v, ...shown } = invoice.toObject();
 
-    return { ...shown, paidDate: shown.paidDate || null, sentAt: shown.sentAt || null, overdue: isOverdue(invoice) };
+    // whether the invoice has a public page; the code itself is given only when it is asked for
+    return { ...shown, paidDate: shown.paidDate || null, sentAt: shown.sentAt || null, overdue: isOverdue(invoice), shared: Boolean(shareCode) && shown.status !== 'draft' };
 };
 
 // a row of the list: enough to show and to find the invoice
@@ -305,4 +306,4 @@ const duplicateInvoice = asyncHandler(async (req, res) => {
     );
 });
 
-export { listInvoices, createInvoice, getInvoice, updateInvoice, changeStatus, deleteInvoice, duplicateInvoice, present, isOverdue }
+export { listInvoices, createInvoice, getInvoice, updateInvoice, changeStatus, deleteInvoice, duplicateInvoice, present, isOverdue, findInvoice }

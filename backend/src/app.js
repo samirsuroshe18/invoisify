@@ -7,6 +7,7 @@ import userRouter from './routes/user.routes.js';
 import verifyRouter from './routes/verify.routes.js';
 import businessRouter from './routes/business.routes.js';
 import invoiceRouter from './routes/invoice.routes.js';
+import publicRouter from './routes/public.routes.js';
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/verify", verifyRouter);
 app.use("/api/v1/business", businessRouter);
 app.use("/api/v1/invoices", invoiceRouter);
+app.use("/api/v1/public", publicRouter);
 
 app.use((req, res, next) => {
     next(new ApiError(404, "Route not found"));

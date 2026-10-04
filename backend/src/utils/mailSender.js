@@ -31,7 +31,7 @@ const createMailTransport = () => {
 };
 
 // Sends through Brevo's HTTPS API. Some hosts block the SMTP ports, and HTTPS always gets out.
-const sendWithBrevo = async ({ to, subject, html }) => {
+const sendWithBrevo = async ({ to, subject, html, senderName = 'Invoisify', replyTo }) => {
   const response = await fetch(BREVO_URL, {
     method: 'POST',
     headers: {
@@ -40,10 +40,11 @@ const sendWithBrevo = async ({ to, subject, html }) => {
       accept: 'application/json',
     },
     body: JSON.stringify({
-      sender: { name: 'Invoisify', email: senderAddress() },
+      sender: { name: senderName, email: senderAddress() },
       to: [{ email: to }],
       subject,
       htmlContent: html,
+      ...(replyTo ? { replyTo: { email: replyTo } } : {}),
     }),
     signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
   });
@@ -55,8 +56,8 @@ const sendWithBrevo = async ({ to, subject, html }) => {
   return response.json();
 };
 
-const sendWithSmtp = ({ to, subject, html }) =>
-  createMailTransport().sendMail({ from: `Invoisify <${senderAddress()}>`, to, subject, html });
+const sendWithSmtp = ({ to, subject, html, senderName = 'Invoisify', replyTo }) =>
+  createMailTransport().sendMail({ from: { name: senderName, address: senderAddress() }, to, subject, html, replyTo });
 
 const MAIL_KEY = 'mail';
 // the mail service allows a number of mails a day; the site stops a little before it
@@ -111,15 +112,44 @@ const escapeHtml = (text) => String(text)
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;');
 
-// A plain message about a decision. The text can contain what users typed, so it is
-// escaped. Returns whether it was sent; a failure never stops the request that caused it.
-async function sendMail(to, subject, text) {
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// "2026-03-15" as "15 Mar 2026"
+const dayLabel = (day) => {
+  const [year, month, date] = day.split('-').map(Number);
+  return `${date} ${MONTHS[month - 1]} ${year}`;
+};
+
+// a name on one line, without the characters that mean something in a mail header
+const headerSafe = (value) => String(value || '').replace(/[\r\n<>"]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+
+// The mail that tells a customer about an invoice. Everything in it that a user typed
+// is escaped in the text and stripped of line breaks in the headers.
+// details: { to, from (the business's name), replyTo, customerName, number, total, currency, dueDate, link }
+const invoiceMail = ({ to, from, replyTo, customerName, number, total, currency, dueDate, link }) => {
+  const business = headerSafe(from) || 'A business';
+  const amount = `${currency} ${Number(total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  return {
+    to,
+    subject: `Invoice ${headerSafe(number)} from ${business}`,
+    senderName: `${business} via Invoisify`,
+    // answers go to the business, when it gave an address that is one
+    replyTo: typeof replyTo === 'string' && EMAIL_PATTERN.test(replyTo) ? replyTo : undefined,
+    html: `<p>Hello ${escapeHtml(customerName)},</p>
+<p>${escapeHtml(business)} has sent you invoice <strong>${escapeHtml(number)}</strong> for <strong>${escapeHtml(amount)}</strong>, due on ${escapeHtml(dayLabel(dueDate))}.</p>
+<p><a href="${escapeHtml(link)}">View the invoice</a>. You can also download it as a PDF there.</p>
+<p>If you have a question about this invoice, reply to this email: your answer goes to ${escapeHtml(business)}.</p>
+<p>Sent with Invoisify</p>`,
+  };
+};
+
+// Sends the invoice mail. Returns whether it was accepted for delivery; a failure
+// never throws, so the caller can leave the invoice as it was.
+async function sendInvoiceMail(details) {
   try {
-    await deliver({
-      to,
-      subject,
-      html: `<p>${escapeHtml(text).replace(/\n/g, '<br>')}</p>\n<p>Invoisify</p>`,
-    });
+    await deliver(invoiceMail(details));
     return true;
   } catch (error) {
     console.log(error.message);
@@ -127,5 +157,6 @@ async function sendMail(to, subject, text) {
   }
 }
 
-export { sendMail };
+export { invoiceMail, sendInvoiceMail };
+
 export default mailSender;

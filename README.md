@@ -3,8 +3,20 @@
 Invoisify lets a freelancer or a small business create invoices, send them to
 customers and see what has been paid.
 
+**Live demo:** <https://invoisify-s.vercel.app> — use "Try the demo account"
+on the login page. The first request after a quiet spell can take up to a
+minute, while the server wakes up.
+
 We started it as a personal project in December 2024 and completed it
 afterwards. [docs/design.md](docs/design.md) describes the design.
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Dashboard: amounts, counts and the last six months](docs/screenshots/dashboard.png) | ![A new invoice with its live preview](docs/screenshots/editor.png) |
+| ![An invoice with its actions and public link](docs/screenshots/invoice.png) | ![The public page a customer opens](docs/screenshots/public-invoice.png) |
+| ![The list of invoices](docs/screenshots/invoices.png) | ![The landing page](docs/screenshots/home.png) |
 
 ## What it does
 

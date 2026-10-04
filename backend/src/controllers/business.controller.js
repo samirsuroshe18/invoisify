@@ -14,6 +14,17 @@ const PAYMENT_MAX = 500;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const COLOUR_PATTERN = /^#[0-9a-f]{6}$/;
+const DUPLICATE_KEY = 11000;
+
+// What the three kinds of image start with. The kind a form claims for a file is only
+// a claim; the first bytes of the file are what it is.
+const isImage = (buffer) => {
+    const starts = (bytes, at = 0) => bytes.every((byte, index) => buffer[at + index] === byte);
+
+    return starts([0xff, 0xd8, 0xff])                                            // JPEG
+        || starts([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])              // PNG
+        || (starts([0x52, 0x49, 0x46, 0x46]) && starts([0x57, 0x45, 0x42, 0x50], 8)); // WebP: RIFF....WEBP
+};
 
 // the profile as the pages and the invoices use it; the same shape before anything was saved
 const describe = (business) => ({
@@ -59,6 +70,10 @@ const getBusiness = asyncHandler(async (req, res) => {
 });
 
 const saveBusiness = asyncHandler(async (req, res) => {
+    if (req.file && !isImage(req.file.buffer)) {
+        throw new ApiError(400, "The logo must be a JPEG, PNG or WebP image");
+    }
+
     // only these fields are ever read from the form
     const fields = {
         companyName: readText(req.body.companyName, 'Company name', { max: NAME_MAX, required: true }),
@@ -89,7 +104,13 @@ const saveBusiness = asyncHandler(async (req, res) => {
         changes.$unset = { logoUrl: '' };
     }
 
-    const business = await Business.findOneAndUpdate({ user: req.user._id }, changes, { upsert: true, new: true });
+    const save = () => Business.findOneAndUpdate({ user: req.user._id }, changes, { upsert: true, new: true });
+
+    // two first saves at once both try to create the profile; the one that lost finds it on a second try
+    const business = await save().catch((error) => {
+        if (error.code !== DUPLICATE_KEY) throw error;
+        return save();
+    });
 
     return res.status(200).json(
         new ApiResponse(200, { business: describe(business) }, `Business profile saved${note}`)

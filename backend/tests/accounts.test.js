@@ -83,11 +83,12 @@ describe('logging in', () => {
         const res = await request(app).post(`${users}/login`).send({ email: user.email.toUpperCase(), password: PASSWORD });
 
         expect(res.status).toBe(200);
-        const cookies = res.headers['set-cookie'].join(';');
-        expect(cookies).toMatch(/accessToken=.*HttpOnly/);
-        expect(cookies).toMatch(/SameSite=Lax/);
+        for (const cookie of res.headers['set-cookie']) {
+            expect(cookie).toMatch(/HttpOnly/);
+            expect(cookie).toMatch(/SameSite=Lax/);
+        }
         expect(res.body.data.user).toMatchObject({ email: user.email, isVerified: true });
-        for (const secret of ['password', 'refreshToken', 'tokenVersion', 'verifyToken', 'forgotPasswordToken']) {
+        for (const secret of ['password', 'tokenVersion', 'verifyToken', 'forgotPasswordToken']) {
             expect(res.body.data.user).not.toHaveProperty(secret);
         }
     });

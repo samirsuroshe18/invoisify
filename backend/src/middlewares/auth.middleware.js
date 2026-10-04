@@ -17,7 +17,7 @@ const verifyJwt = asyncHandler(async (req, _, next) => {
         throw new ApiError(401, "Your session has ended. Log in again.");
     }
 
-    const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
+    const user = await User.findById(decodedToken?._id).select("-password");
 
     // logout and a password change raise the version, which ends every older session
     if (!user || decodedToken.tokenVersion !== user.tokenVersion) {

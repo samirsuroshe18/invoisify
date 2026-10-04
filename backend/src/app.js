@@ -10,6 +10,9 @@ import invoiceRouter from './routes/invoice.routes.js';
 
 const app = express();
 
+// the server does not say what it is made with
+app.disable('x-powered-by');
+
 // behind the host's proxy the connection's own address is the proxy; this makes
 // req.ip the address the proxy saw
 app.set('trust proxy', 1);

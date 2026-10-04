@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { listInvoices } from '../api/invoiceApi';
 import { errorMessage } from '../api/client';
@@ -27,24 +27,33 @@ const Invoices = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  // raised by "Try again": the same list is asked for once more
+  const [attempt, setAttempt] = useState(0);
 
-  const update = (changes) => {
-    const next = { status, search, page: String(page), ...changes };
-    const cleaned = Object.fromEntries(Object.entries(next).filter(([key, value]) =>
-      value && !(key === 'status' && value === 'all') && !(key === 'page' && value === '1')));
+  // Changes are applied to the address as it is at that moment, so a filter clicked
+  // while a search is still waiting is not undone by it.
+  const update = useCallback((changes) => {
+    setParams((current) => {
+      const next = { status: current.get('status') || '', search: current.get('search') || '', page: current.get('page') || '', ...changes };
+      const cleaned = Object.fromEntries(Object.entries(next).filter(([key, value]) =>
+        value && !(key === 'status' && value === 'all') && !(key === 'page' && value === '1')));
 
-    setParams(cleaned, { replace: true });
-  };
+      return cleaned;
+    }, { replace: true });
+  }, [setParams]);
+
+  // the box shows what the address says: after the back button, or a click on "Invoices"
+  useEffect(() => {
+    setTyped(search);
+  }, [search]);
 
   // the search starts a moment after the typing stops
   useEffect(() => {
-    if (typed === search) return undefined;
+    if (typed.trim() === search) return undefined;
 
     const timer = setTimeout(() => update({ search: typed.trim(), page: '1' }), SEARCH_WAIT_MS);
     return () => clearTimeout(timer);
-    // only the typed text starts the timer
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typed]);
+  }, [typed, search, update]);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,12 +61,22 @@ const Invoices = () => {
     setError('');
 
     listInvoices({ status, search, page })
-      .then((answer) => { if (!cancelled) setData(answer); })
+      .then((answer) => {
+        if (cancelled) return;
+
+        // a page past the end (the last invoice of a page was deleted): show the last page
+        if (answer.invoices.length === 0 && page > answer.pages) {
+          update({ page: String(answer.pages) });
+          return;
+        }
+
+        setData(answer);
+      })
       .catch((failure) => { if (!cancelled) { setData(null); setError(errorMessage(failure)); } })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [status, search, page]);
+  }, [status, search, page, attempt, update]);
 
   const filtered = status !== 'all' || Boolean(search);
 
@@ -90,7 +109,7 @@ const Invoices = () => {
       {error && (
         <div role="alert" className="card p-6 text-center">
           <p className="text-red-600">{error}</p>
-          <button onClick={() => update({})} className="btn-quiet mt-3">Try again</button>
+          <button onClick={() => setAttempt((count) => count + 1)} className="btn-quiet mt-3">Try again</button>
         </div>
       )}
 

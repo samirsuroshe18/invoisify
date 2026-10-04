@@ -2,6 +2,7 @@
 import { createTransport } from 'nodemailer';
 import crypto from 'crypto';
 import { User } from '../models/user.model.js';
+import { take } from './dailyLimit.js';
 
 const TOKEN_LIFETIME_MS = 1000 * 60 * 10;
 const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
@@ -57,8 +58,20 @@ const sendWithBrevo = async ({ to, subject, html }) => {
 const sendWithSmtp = ({ to, subject, html }) =>
   createMailTransport().sendMail({ from: `Invoisify <${senderAddress()}>`, to, subject, html });
 
-// the HTTPS API is used whenever a key is configured; otherwise plain SMTP
-const deliver = (message) => (process.env.BREVO_API_KEY ? sendWithBrevo(message) : sendWithSmtp(message));
+const MAIL_KEY = 'mail';
+// the mail service allows a number of mails a day; the site stops a little before it
+const mailsAllowed = () => Number(process.env.DAILY_MAIL_LIMIT) || 250;
+
+// The HTTPS API is used whenever a key is configured; otherwise plain SMTP. Every mail
+// counts against the day's allowance of the whole site, so no single form can use up
+// what the mail service allows.
+const deliver = async (message) => {
+  if (await take(MAIL_KEY, mailsAllowed()) === null) {
+    throw new Error("Today's allowance of mail is used up");
+  }
+
+  return process.env.BREVO_API_KEY ? sendWithBrevo(message) : sendWithSmtp(message);
+};
 
 // emailType is "VERIFY" or "RESET"
 async function mailSender(email, userId, emailType) {

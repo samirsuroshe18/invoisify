@@ -16,6 +16,12 @@ const ADDRESS_MAX = 300;
 const NOTES_MAX = 1000;
 const SEARCH_MAX = 80;
 const PER_PAGE = 20;
+const MAX_PAGE = 100000;
+
+// how many invoices an account may hold; the demo account is shared, so it gets fewer
+const invoicesAllowed = (user) => (user.isDemo
+    ? Number(process.env.MAX_DEMO_INVOICES) || 200
+    : Number(process.env.MAX_INVOICES) || 2000);
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LIST_FILTERS = ['all', 'draft', 'sent', 'overdue', 'paid'];
@@ -114,6 +120,14 @@ const readInvoice = (body, business) => {
     };
 };
 
+const assertRoom = async (user) => {
+    const limit = invoicesAllowed(user);
+
+    if (await Invoice.countDocuments({ user: user._id }) >= limit) {
+        throw new ApiError(409, `You have reached the limit of ${limit} invoices. Delete one to make room.`);
+    }
+};
+
 // the business as it is now, to be written onto an invoice
 const businessFor = async (user) => {
     const business = await getBusinessOf(user._id);
@@ -132,7 +146,7 @@ const listInvoices = asyncHandler(async (req, res) => {
     const status = readChoice(req.query.status, 'Status', LIST_FILTERS) || 'all';
     const search = readText(req.query.search, 'Search', { max: SEARCH_MAX });
     const asked = Number(req.query.page);
-    const page = Number.isInteger(asked) && asked >= 1 ? asked : 1;
+    const page = Number.isInteger(asked) && asked >= 1 && asked <= MAX_PAGE ? asked : 1;
 
     const filter = { user: req.user._id };
     const day = today();
@@ -165,6 +179,7 @@ const listInvoices = asyncHandler(async (req, res) => {
 const createInvoice = asyncHandler(async (req, res) => {
     const business = await businessFor(req.user);
     const fields = readInvoice(req.body, business);
+    await assertRoom(req.user);
 
     // the number is taken only for an invoice that passed every check
     const invoice = await Invoice.create({
@@ -223,6 +238,11 @@ const changeStatus = asyncHandler(async (req, res) => {
             throw new ApiError(400, "The paid date cannot be before the issue date");
         }
 
+        // one day ahead of the business's day is allowed: where the user is, it may be tomorrow already
+        if (paidDate > addDays(today(), 1)) {
+            throw new ApiError(400, "The paid date cannot be in the future");
+        }
+
         changes.$set.paidDate = paidDate;
     } else {
         changes.$unset.paidDate = '';
@@ -265,6 +285,7 @@ const deleteInvoice = asyncHandler(async (req, res) => {
 const duplicateInvoice = asyncHandler(async (req, res) => {
     const original = await findInvoice(req.params.id, req.user);
     const business = await businessFor(req.user);
+    await assertRoom(req.user);
     const { customer, currency, items, discountPercent, taxPercent, subtotal, discountAmount, taxAmount, total, notes } = original.toObject();
     const issueDate = today();
 

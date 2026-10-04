@@ -11,37 +11,50 @@ const skippedInTests = () => process.env.NODE_ENV === 'test' && !process.env.ACC
 
 const setting = (name, fallback) => () => Number(process.env[name]) || fallback;
 
-const limiter = (limit, keyGenerator, skip = skippedInTests) => rateLimit({
+const limiter = (limit, keyGenerator, { skip = skippedInTests, failuresOnly = false } = {}) => rateLimit({
     windowMs: WINDOW_MS,
     limit,
     keyGenerator,
     skip,
+    // for logins: only attempts that were refused count
+    skipSuccessfulRequests: failuresOnly,
     standardHeaders: true,
     legacyHeaders: false,
     validate: false,
     handler: (req, res, next) => next(new ApiError(429, TOO_MANY)),
 });
 
+const emailOf = (req) => (typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '');
+const withoutEmail = (req) => skippedInTests() || !emailOf(req);
+
 // The visitor's address is forwarded by the proxies in front of the server and can be
 // made up by someone who calls the server directly. The address the request really
-// arrived from cannot, and neither can the email address it is about, so each of
-// those has a limit of its own. The connection comes first: made-up visitors are
-// refused before anything is remembered about them.
-const emailOf = (req) => (typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '');
-
-const byConnection = limiter(setting('ACCOUNT_CONNECTION_RATE_LIMIT', 120), (req) => `connection:${connectionOf(req)}`);
+// arrived from cannot, so it has a limit of its own, and it comes first: made-up
+// visitors are refused before anything is remembered about them. Requests through the
+// web app all arrive from the web app's host, so this limit is a wide one.
+const byConnection = limiter(setting('ACCOUNT_CONNECTION_RATE_LIMIT', 600), (req) => `connection:${connectionOf(req)}`);
 const byVisitor = limiter(setting('ACCOUNT_RATE_LIMIT', 30), visitorOf);
-const byEmail = limiter(
-    setting('ACCOUNT_EMAIL_RATE_LIMIT', 10),
-    (req) => `email:${emailOf(req)}`,
-    (req) => skippedInTests() || !emailOf(req)
-);
 
-// sign-up, login and password reset: they can send email or test a password
-const accountLimiter = [byConnection, byVisitor, byEmail];
+// Wrong passwords for one account. A visitor gets a few tries; so that guessing from
+// one place cannot lock the owner out elsewhere, the count for the account as a whole
+// is much wider. A login that succeeds is not counted at all.
+const guessesByVisitor = limiter(setting('ACCOUNT_GUESS_RATE_LIMIT', 10), (req) => `guess:${emailOf(req)}:${visitorOf(req)}`, { skip: withoutEmail, failuresOnly: true });
+const guessesByAccount = limiter(setting('ACCOUNT_EMAIL_RATE_LIMIT', 50), (req) => `account:${emailOf(req)}`, { skip: withoutEmail, failuresOnly: true });
 
-// the demo login needs no password, so it only has the limits by address
-const demoLimiter = [byConnection, byVisitor];
+// mail to one address: sign-up and password reset
+const mailByAddress = limiter(setting('ACCOUNT_MAIL_RATE_LIMIT', 5), (req) => `mail:${emailOf(req)}`, { skip: withoutEmail });
+
+const loginLimiter = [byConnection, byVisitor, guessesByVisitor, guessesByAccount];
+
+// sign-up and password reset send a mail to the address they are given
+const mailLimiter = [byConnection, byVisitor, mailByAddress];
+
+// the demo login and the links from emails have no address to count by
+const visitorLimiter = [byConnection, byVisitor];
+
+// a new verification link: counted for the account, wherever the requests come from.
+// Use after verifyJwt.
+const resendLimiter = [byConnection, limiter(setting('RESEND_RATE_LIMIT', 5), (req) => `resend:${req.user?._id}`)];
 
 // Everything a logged-in user changes; reading is not limited. The demo account is
 // shared by every visitor, so its limit is kept per visitor: one visitor cannot use up
@@ -49,7 +62,7 @@ const demoLimiter = [byConnection, byVisitor];
 const writeLimiter = limiter(
     setting('WRITE_RATE_LIMIT', 120),
     (req) => `write:${req.user?._id}:${req.user?.isDemo ? visitorOf(req) : ''}`,
-    (req) => skippedInTests() || req.method === 'GET'
+    { skip: (req) => skippedInTests() || req.method === 'GET' }
 );
 
-export { accountLimiter, demoLimiter, writeLimiter }
+export { loginLimiter, mailLimiter, visitorLimiter, resendLimiter, writeLimiter }

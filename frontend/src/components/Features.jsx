@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import Typed from 'typed.js';
 import { FaCheckCircle, FaCog, FaFileInvoice } from 'react-icons/fa';
-import { useSpring, animated } from 'react-spring';
+import { useSpring, animated } from '@react-spring/web';
 
 const Features = () => {
   

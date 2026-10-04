@@ -102,7 +102,8 @@ const totalsOf = ({ items, discountPercent, taxPercent }) => {
     const taxAmount = divideRounded((subtotal - discountAmount) * scaled(taxPercent, 2), 10000n);
     const total = subtotal - discountAmount + taxAmount;
 
-    if (total > MAX_TOTAL) refuse('The invoice total is too large');
+    // the subtotal is the largest figure there is before a discount takes it down again
+    if (total > MAX_TOTAL || subtotal > MAX_TOTAL) refuse('The invoice total is too large');
 
     return {
         items: lines.map((line) => ({ ...line, amount: toUnits(line.amount) })),

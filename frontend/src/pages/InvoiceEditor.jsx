@@ -6,7 +6,8 @@ import { createInvoice, getInvoice, updateInvoice } from '../api/invoiceApi';
 import { errorMessage, statusOf as httpStatus } from '../api/client';
 import InvoiceDocument from '../components/InvoiceDocument';
 import useToast from '../lib/useToast';
-import { addDays, CURRENCIES, localToday, previewTotals } from '../lib/format';
+import { addDays, CURRENCIES, localToday } from '../lib/format';
+import { isPercent, isQuantity, isRate, previewTotals, tidyNumber } from '../lib/amounts';
 
 const MAX_ITEMS = 50;
 const DAYS_TO_PAY = 14;
@@ -42,11 +43,27 @@ const problemIn = (form) => {
   if (!form.issueDate || !form.dueDate) return 'Give the issue date and the due date';
   if (form.dueDate < form.issueDate) return 'The due date cannot be before the issue date';
 
-  const position = form.items.findIndex((item) => !item.description.trim() || !(Number(item.quantity) > 0) || item.rate === '' || !(Number(item.rate) >= 0));
-  if (position >= 0) return `Item ${position + 1}: give a description, a quantity above 0 and a rate`;
+  for (const [index, item] of form.items.entries()) {
+    const label = `Item ${index + 1}`;
+
+    if (!item.description.trim()) return `${label}: give a description`;
+    if (!isQuantity(item.quantity)) return `${label}: the quantity is a number above 0 with at most three decimals, like 2 or 0.5`;
+    if (!isRate(item.rate)) return `${label}: the rate is a number with at most two decimals, like 1500 or 199.99`;
+  }
+
+  if (!isPercent(form.discountPercent)) return 'The discount is a percentage from 0 to 100 with at most two decimals';
+  if (!isPercent(form.taxPercent)) return 'The tax is a percentage from 0 to 100 with at most two decimals';
 
   return '';
 };
+
+// the form as the server wants it: numbers written plainly (".5" becomes "0.5")
+const forSending = (form) => ({
+  ...form,
+  items: form.items.map((item) => ({ description: item.description, quantity: tidyNumber(item.quantity), rate: tidyNumber(item.rate) })),
+  discountPercent: tidyNumber(form.discountPercent) || '0',
+  taxPercent: tidyNumber(form.taxPercent) || '0',
+});
 
 // One form for a new invoice and for editing a draft, with the invoice as it will
 // look beside it (under it on a phone).
@@ -145,7 +162,7 @@ const InvoiceEditor = () => {
     setSaving(true);
     setError('');
     try {
-      const res = id ? await updateInvoice(id, form) : await createInvoice(form);
+      const res = id ? await updateInvoice(id, forSending(form)) : await createInvoice(forSending(form));
       toast.success(res.message);
       navigate(`/invoices/${res.data.invoice._id}`);
     } catch (failure) {
@@ -207,11 +224,11 @@ const InvoiceEditor = () => {
                 </div>
                 <div className="col-span-4 sm:col-span-2">
                   <label htmlFor={`item-${index}-quantity`} className="label">Qty</label>
-                  <input id={`item-${index}-quantity`} type="number" min="0" step="any" inputMode="decimal" className="field" value={item.quantity} onChange={(e) => setItem(index, 'quantity', e.target.value)} />
+                  <input id={`item-${index}-quantity`} type="text" inputMode="decimal" autoComplete="off" className="field" value={item.quantity} onChange={(e) => setItem(index, 'quantity', e.target.value)} />
                 </div>
                 <div className="col-span-5 sm:col-span-3">
                   <label htmlFor={`item-${index}-rate`} className="label">Rate</label>
-                  <input id={`item-${index}-rate`} type="number" min="0" step="0.01" inputMode="decimal" className="field" value={item.rate} onChange={(e) => setItem(index, 'rate', e.target.value)} />
+                  <input id={`item-${index}-rate`} type="text" inputMode="decimal" autoComplete="off" className="field" value={item.rate} onChange={(e) => setItem(index, 'rate', e.target.value)} />
                 </div>
                 <div className="col-span-3 sm:col-span-1">
                   <button type="button" onClick={() => removeItem(index)} disabled={form.items.length === 1} aria-label={`Remove item ${index + 1}`} className="btn-quiet w-full px-0">✕</button>
@@ -225,11 +242,11 @@ const InvoiceEditor = () => {
             <legend className="font-semibold text-gray-800 mb-1">Discount and tax</legend>
             <div>
               <label htmlFor="discountPercent" className="label">Discount %</label>
-              <input id="discountPercent" type="number" min="0" max="100" step="0.01" inputMode="decimal" className="field" value={form.discountPercent} onChange={(e) => set({ discountPercent: e.target.value })} />
+              <input id="discountPercent" type="text" inputMode="decimal" autoComplete="off" className="field" value={form.discountPercent} onChange={(e) => set({ discountPercent: e.target.value })} />
             </div>
             <div>
               <label htmlFor="taxPercent" className="label">Tax %</label>
-              <input id="taxPercent" type="number" min="0" max="100" step="0.01" inputMode="decimal" className="field" value={form.taxPercent} onChange={(e) => set({ taxPercent: e.target.value })} />
+              <input id="taxPercent" type="text" inputMode="decimal" autoComplete="off" className="field" value={form.taxPercent} onChange={(e) => set({ taxPercent: e.target.value })} />
             </div>
           </fieldset>
 

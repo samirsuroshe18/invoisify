@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../api/authApi';
 import { loggedOut } from '../redux/slices/authSlice';
 import useToast from '../lib/useToast';
+import logo from '../assets/logo.svg';
 
 const APP_LINKS = [
   { name: 'Dashboard', href: '/dashboard' },
@@ -57,7 +58,7 @@ const Navbar = () => {
     <nav className="sticky top-0 z-40 bg-white shadow-sm">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         <Link to={isIn ? '/dashboard' : '/'} onClick={close} className="flex items-center gap-2">
-          <img className="h-7" src="https://img.icons8.com/ios-filled/50/000000/invoice.png" alt="" />
+          <img className="h-8 w-8" src={logo} alt="" />
           <span className="text-xl font-semibold text-gray-800">Invoisify</span>
         </Link>
 

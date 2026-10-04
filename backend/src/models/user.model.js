@@ -2,6 +2,9 @@ import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from 'bcrypt';
 
+// how long a login lasts; the cookie that carries it lasts as long
+export const SESSION_DAYS = 7;
+
 const userSchema = new Schema({
     name: {
         type: String,
@@ -31,10 +34,6 @@ const userSchema = new Schema({
     isDemo: {
         type: Boolean,
         default: false,
-    },
-
-    refreshToken: {
-        type: String
     },
 
     // raised on logout and password change; a token carrying an older value is refused
@@ -69,19 +68,7 @@ userSchema.methods.generateAccessToken = function () {
             tokenVersion: this.tokenVersion,
         }, process.env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
-        }
-    );
-}
-
-userSchema.methods.generateRefreshToken = function () {
-    return jwt.sign(
-        {
-            _id: this._id
-        },
-        process.env.REFRESH_TOKEN_SECRET,
-        {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+            expiresIn: `${SESSION_DAYS}d`
         }
     );
 }
@@ -90,7 +77,6 @@ userSchema.methods.generateRefreshToken = function () {
 userSchema.set('toJSON', {
     transform: (_, ret) => {
         delete ret.password;
-        delete ret.refreshToken;
         delete ret.tokenVersion;
         delete ret.verifyToken;
         delete ret.verifyTokenExpiry;

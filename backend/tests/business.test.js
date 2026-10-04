@@ -11,7 +11,7 @@ const { loggedIn } = await import('./helpers.js');
 
 const api = '/api/v1/business';
 const good = { companyName: 'Northwind Studio', email: 'hello@northwind.test', address: '12 Lake Road, Pune' };
-const png = Buffer.alloc(300);
+const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(300)]);
 const withLogo = (agent, fields = good, file = { filename: 'logo.png', contentType: 'image/png' }, bytes = png) => {
     const req = agent.put(api);
     Object.entries(fields).forEach(([key, value]) => req.field(key, value));
@@ -138,7 +138,7 @@ describe('the logo', () => {
         const { agent } = await loggedIn();
 
         const pdf = await withLogo(agent, good, { filename: 'logo.pdf', contentType: 'application/pdf' });
-        const large = await withLogo(agent, good, { filename: 'logo.png', contentType: 'image/png' }, Buffer.alloc(1024 * 1024 + 1));
+        const large = await withLogo(agent, good, { filename: 'logo.png', contentType: 'image/png' }, Buffer.concat([png, Buffer.alloc(1024 * 1024)]));
 
         expect([pdf.status, pdf.body.message]).toEqual([400, 'The logo must be a JPEG, PNG or WebP image']);
         expect([large.status, large.body.message]).toEqual([400, 'The logo must be 1 MB or smaller']);

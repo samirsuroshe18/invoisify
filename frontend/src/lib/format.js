@@ -30,17 +30,3 @@ export const addDays = (day, count) => {
 export const statusOf = (invoice) => (invoice.overdue ? 'overdue' : invoice.status);
 
 export const STATUS_LABELS = { draft: 'Draft', sent: 'Sent', overdue: 'Overdue', paid: 'Paid' };
-
-// The totals of an invoice while it is being typed, for the preview only. The server
-// calculates the stored totals itself, exactly; this follows the same steps.
-export const previewTotals = ({ items, discountPercent, taxPercent }) => {
-  const round = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
-  const number = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0);
-
-  const lines = items.map((item) => ({ ...item, amount: round(number(item.quantity) * number(item.rate)) }));
-  const subtotal = round(lines.reduce((sum, line) => sum + line.amount, 0));
-  const discountAmount = round((subtotal * number(discountPercent)) / 100);
-  const taxAmount = round(((subtotal - discountAmount) * number(taxPercent)) / 100);
-
-  return { items: lines, subtotal, discountAmount, taxAmount, total: round(subtotal - discountAmount + taxAmount) };
-};

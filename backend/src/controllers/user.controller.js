@@ -1,7 +1,8 @@
 import asyncHandler from '../utils/asynchandler.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
-import { User } from '../models/user.model.js';
+import bcrypt from 'bcrypt';
+import { SESSION_DAYS, User } from '../models/user.model.js';
 import mailSender from '../utils/mailSender.js';
 import { endSessions } from '../utils/sessions.js';
 import { DEMO_EMAIL, isDemoEmail } from '../utils/demo.js';
@@ -11,6 +12,13 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_MAX = 80;
 const EMAIL_MAX = 254;
 const DUPLICATE_KEY = 11000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const LINK_LIFETIME_MS = 10 * 60 * 1000;
+const RESEND_WAIT_MS = 60 * 1000;
+
+// The hash of no password anyone has. A login for an address without an account is
+// checked against it, so it takes as long to refuse as a wrong password does.
+const NO_ACCOUNT_HASH = bcrypt.hashSync('no account has this password', 10);
 
 // the cookie must only require https in production, otherwise it is dropped on http://localhost
 const cookieOptions = () => ({
@@ -33,17 +41,11 @@ const readText = (value, label) => {
 
 const readEmail = (value) => readText(value, 'Email').toLowerCase();
 
-// logs the user in on this browser: new tokens in httpOnly cookies
+// logs the user in on this browser: a token in an httpOnly cookie that lasts as long as the token
 const startSession = async (res, userId) => {
     const user = await User.findById(userId);
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
 
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-
-    res.cookie('accessToken', accessToken, cookieOptions())
-        .cookie('refreshToken', refreshToken, cookieOptions());
+    res.cookie('accessToken', user.generateAccessToken(), { ...cookieOptions(), maxAge: SESSION_DAYS * DAY_MS });
 
     return user;
 };
@@ -106,8 +108,13 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const user = await User.findOne({ email });
 
-    // the same answer for an unknown email and a wrong password, so accounts cannot be probed
-    if (!user || !(await user.isPasswordCorrect(req.body.password))) {
+    // the same answer, after the same work, for an unknown email and a wrong password,
+    // so accounts cannot be probed
+    const correct = user
+        ? await user.isPasswordCorrect(req.body.password)
+        : await bcrypt.compare(req.body.password, NO_ACCOUNT_HASH).then(() => false);
+
+    if (!correct) {
         throw new ApiError(401, "Invalid email or password");
     }
 
@@ -140,7 +147,6 @@ const logoutUser = asyncHandler(async (req, res) => {
 
     return res.status(200)
         .clearCookie("accessToken", cookieOptions())
-        .clearCookie("refreshToken", cookieOptions())
         .json(new ApiResponse(200, {}, "Logged out"));
 });
 
@@ -153,6 +159,14 @@ const getMe = asyncHandler(async (req, res) => {
 const resendVerification = asyncHandler(async (req, res) => {
     if (req.user.isVerified) {
         throw new ApiError(400, "Your email is already verified");
+    }
+
+    // a link that was sent less than a minute ago is still on its way
+    const user = await User.findById(req.user._id);
+    const sentAt = user.verifyTokenExpiry ? user.verifyTokenExpiry.getTime() - LINK_LIFETIME_MS : 0;
+
+    if (Date.now() - sentAt < RESEND_WAIT_MS) {
+        throw new ApiError(429, "A link was sent a moment ago. Check your inbox, or try again in a minute.");
     }
 
     const sent = await mailSender(req.user.email, req.user._id, "VERIFY");

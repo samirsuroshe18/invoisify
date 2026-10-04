@@ -52,12 +52,19 @@ that already has invoices in it.
   a page that receives it. An account that is not verified can log in and is
   told to verify, with a button to send the link again; it cannot create or
   send anything until it is verified.
-- Login keeps the session in an httpOnly cookie. Logout and a password reset
-  end every session of the account.
+- Login keeps the session in an httpOnly cookie for 7 days. Logout, a password
+  change and a password reset end every session of the account.
+- A second verification link can be asked for a minute after the first, and
+  an account can ask for five in fifteen minutes.
 - "Forgot password" sends a reset link, valid for 10 minutes, to a page of
   the app. The answer is the same whether or not the address has an account.
-- Sign-up, login and password reset are limited per visitor, per connecting
-  address and per email address.
+- Sign-up, login and password reset are limited per visitor and per
+  connecting address. Sign-up and password reset are also limited per email
+  address. Wrong passwords are counted per account and visitor, and more
+  widely per account, so guessing from one place does not lock the owner out
+  elsewhere; a login that succeeds is not counted. An IPv6 visitor is counted
+  by network.
+- The whole site sends at most `DAILY_MAIL_LIMIT` mails a day (default 250).
 - **Demo account**: `demo@invoisify.demo`, password `Demo@123`, behind a
   button on the login page. Nobody can sign up with an `@invoisify.demo`
   address. The demo account sends no email, stores no files, cannot change
@@ -73,7 +80,7 @@ One for each user, in Settings:
 |---|---|
 | Company name | Required before the first invoice; at most 120 characters |
 | Email, phone, address | Optional; address at most 300 characters |
-| Logo | Optional. JPEG, PNG or WebP, at most 1 MB, stored on Cloudinary. Without Cloudinary settings the profile works and the logo is not stored |
+| Logo | Optional. JPEG, PNG or WebP, at most 1 MB, recognised by its content and not by its name, stored on Cloudinary. Without Cloudinary settings the profile works and the logo is not stored |
 | Accent colour | A `#rrggbb` colour for the invoice heading; default `#2563eb` |
 | Default currency | One of `INR`, `USD`, `EUR`, `GBP`; default `INR` |
 | Default tax rate | 0 to 100 per cent, at most two decimals; default 0 |
@@ -97,6 +104,10 @@ draft. An invoice that was sent keeps the details it was sent with.
 | Tax | 0 to 100 per cent, applied after the discount |
 | Notes | Optional, at most 1,000 characters |
 
+A quantity is at most 100,000, a rate at most 100,000,000, and the total of an
+invoice at most a million million. An account holds at most 2,000 invoices
+(`MAX_INVOICES`); the demo account 200.
+
 ### Totals
 
 The server calculates them, in hundredths so they are exact, and stores them
@@ -114,7 +125,7 @@ with the invoice. What the browser sends as a total is ignored.
 |---|---|---|
 | `draft` | Being written | Edit, send, mark as sent, delete, duplicate |
 | `sent` | Given to the customer | Mark as paid, send again, back to draft, delete, duplicate |
-| `paid` | Paid on a day the user gives (today by default, not before the issue date) | Mark as unpaid (back to `sent`), duplicate |
+| `paid` | Paid on a day the user gives (today by default, not before the issue date, not in the future) | Mark as unpaid (back to `sent`), duplicate |
 
 `overdue` is not stored: an invoice is overdue when it is `sent` and its due
 date is before today. "Today" is the day in the time zone set by
@@ -235,8 +246,8 @@ docs/design.md
 The web app calls `/api` on its own address; the dev server and the host
 forward it to the server.
 
-`backend/.env`: `MONGODB_URI`, `PORT`, `SERVER_HOST`, `FRONTEND_URL`, token
-secrets and expiries, SMTP settings or `BREVO_API_KEY` and `MAIL_FROM`,
+`backend/.env`: `MONGODB_URI`, `PORT`, `SERVER_HOST`, `FRONTEND_URL`,
+`ACCESS_TOKEN_SECRET`, `NODE_ENV`, SMTP settings or `BREVO_API_KEY` and `MAIL_FROM`,
 Cloudinary settings (optional), `SEED_ON_START`, `DAILY_SEND_LIMIT`,
 `BUSINESS_UTC_OFFSET_MINUTES`, `CONNECTION_IP_HEADER` (on hosts whose own
 proxies sit in front of the server). The web app needs none.

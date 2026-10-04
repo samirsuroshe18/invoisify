@@ -20,7 +20,7 @@ const InvoiceView = () => {
   const [loadError, setLoadError] = useState('');
   const [busy, setBusy] = useState('');
   const [paying, setPaying] = useState(false);
-  const [paidDate, setPaidDate] = useState(localToday());
+  const [paidDate, setPaidDate] = useState('');
 
   const load = useCallback(async () => {
     setLoadError('');
@@ -59,6 +59,15 @@ const InvoiceView = () => {
       setInvoice(res.data.invoice);
       setPaying(false);
     }
+  };
+
+  // The latest day an invoice can have been paid on is today, here. Where the business
+  // is, it may be a day ahead already, so an invoice issued "today" there is not refused.
+  const latestPaidDay = () => (invoice.issueDate > localToday() ? invoice.issueDate : localToday());
+
+  const startPaying = () => {
+    setPaidDate(latestPaidDay());
+    setPaying(true);
   };
 
   const duplicate = async () => {
@@ -129,7 +138,7 @@ const InvoiceView = () => {
 
         {status === 'sent' && (
           <>
-            <button onClick={() => setPaying(true)} disabled={!can} className="btn-quiet">Mark as paid</button>
+            <button onClick={startPaying} disabled={!can} className="btn-quiet">Mark as paid</button>
             <button onClick={() => move('draft')} disabled={!can} className="btn-quiet">Back to draft</button>
           </>
         )}
@@ -147,7 +156,7 @@ const InvoiceView = () => {
         >
           <div>
             <label htmlFor="paidDate" className="label">Paid on</label>
-            <input id="paidDate" type="date" min={invoice.issueDate} max={localToday()} className="field" value={paidDate} onChange={(e) => setPaidDate(e.target.value)} />
+            <input id="paidDate" type="date" min={invoice.issueDate} max={latestPaidDay()} className="field" value={paidDate} onChange={(e) => setPaidDate(e.target.value)} />
           </div>
           <button type="submit" disabled={!can || !paidDate} className="btn-primary">Confirm payment</button>
           <button type="button" onClick={() => setPaying(false)} className="btn-quiet">Cancel</button>

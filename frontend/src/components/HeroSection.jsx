@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useSpring, animated } from 'react-spring';
+import { useSpring, animated } from '@react-spring/web';
 import { FaArrowDown } from 'react-icons/fa';
 import { Link } from 'react-scroll';
 import AOS from 'aos';
@@ -60,7 +60,7 @@ const HeroSection = () => {
       </div>
 
       {/* Hero Image */}
-      <div className="hidden lg:block w-full lg:w-1/2 flex justify-center">
+      <div className="hidden lg:flex w-full lg:w-1/2 justify-center">
         <img
           src={heroImg}
           alt=""

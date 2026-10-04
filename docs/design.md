@@ -4,25 +4,20 @@ Invoisify lets a freelancer or a small business create invoices, send them to
 customers and see what has been paid. It began as a personal project of the
 team in December 2024. This document describes the completed version.
 
-## 1. Where the project stands
+## 1. Where the project started
 
-The first version has accounts with Google login, a form that creates an
+The first version had accounts with Google login, a form that creates an
 invoice with a PDF download, a history page, a dashboard, templates and
-reviews.
+reviews. To become a complete app it still needed:
 
-| Problem | Effect |
-|---|---|
-| The dashboard, the invoice form and the history open without a login; the check of the session is commented out | Pages that fail or show nothing for a visitor |
-| The dashboard shows fixed numbers and a made-up activity list | Nothing on it is true |
-| An invoice can only be created | It cannot be opened again, changed, deleted or marked as paid; its status never changes |
-| There are two invoice forms; one posts to a route that does not exist | One of them can never work |
-| A logo is required and the server fails without one | An invoice cannot be created without an image |
-| The server trusts the total the browser sends | The stored total can be anything |
-| The history page calls `localhost:3000` and treats "no invoices" as an error | It works on the developer's machine only |
-| Anyone can create templates and reviews without logging in | Open to spam |
-| Verification and reset pages are rendered by the server from templates | They do not look like the app and break behind a separate web host |
-| Uploaded images were committed | Removed from the history of the new repository |
-| No tests | Nothing guards the behaviour |
+- a login in front of the dashboard, the invoices and the history
+- the whole life of an invoice: opening it again, changing it, deleting it,
+  marking it as sent and as paid
+- totals calculated by the server
+- a dashboard with the user's own figures
+- reviews and business details tied to an account
+- verification and password reset pages that are part of the web app
+- tests
 
 ## 2. What the completed app does
 
@@ -34,16 +29,14 @@ that already has invoices in it.
 
 | Topic | Decision |
 |---|---|
-| Repository | New repository `invoisify` under samirsuroshe18, team history kept, uploaded images and the Google client id removed from every commit |
 | Sign-in | Email accounts with verification and password reset, and a demo login. Google login is removed |
 | Invoices | Full life cycle: create, open, edit a draft, duplicate, delete, download as PDF, draft → sent → paid, overdue shown automatically |
 | Sending | Email to the customer with a link to a public read-only page of the invoice |
 | Templates | Become a business profile for each user |
 | Reviews | Kept on the landing page; only verified users post, one each |
 | Dashboard | Real figures and a chart from the user's own invoices |
-| Look | The current look is kept; what is broken is fixed |
+| Look | The look of the first version is kept |
 | Out of scope | Online payment, recurring invoices, a saved client list, several users for one business |
-| Delivery | Two stages (section 12) |
 
 ## 3. Accounts
 
@@ -269,16 +262,7 @@ change, sending and its limit, the public page, the dashboard figures, the
 reviews and the demo data. The web app is checked by building it, linting it
 and walking through every page in a browser on a desktop and a phone width.
 
-## 12. Stages
-
-1. **Accounts, business profile and invoices**: sections 3 to 5, the demo
-   account with its sample invoices, and the pages for them.
-2. **Sending, dashboard and reviews**: sections 6 to 8, the public invoice
-   page, the landing page and the README.
-
-Each stage has its own plan, tests, review and pull request.
-
-## 13. Deployment
+## 12. Deployment
 
 Server on Render, web app on Vercel, database on MongoDB Atlas, email through
 Brevo, logos on Cloudinary. `frontend/vercel.json` forwards `/api` to the

@@ -1,139 +1,109 @@
-import React from 'react';
-import { Typography, Avatar, Container, Grid, Paper, LinearProgress, Box, Card, CardContent, CardHeader } from '@mui/material';
-import { FaFileInvoice, FaMoneyBillAlt, FaClipboardList, FaStar } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
-import 'react-circular-progressbar/dist/styles.css';
-import Navbar from '../components/Navbar';
+import { FaFileInvoice, FaPaperPlane, FaExclamationCircle, FaCheckCircle } from 'react-icons/fa';
+import { listInvoices } from '../api/invoiceApi';
+import { getBusiness } from '../api/businessApi';
+import { errorMessage } from '../api/client';
+import StatusBadge from '../components/StatusBadge';
+import { dayLabel, money } from '../lib/format';
 
+const CARDS = [
+  { status: 'draft', label: 'Drafts', icon: FaFileInvoice, color: 'text-gray-500' },
+  { status: 'sent', label: 'Sent, waiting for payment', icon: FaPaperPlane, color: 'text-blue-600' },
+  { status: 'overdue', label: 'Overdue', icon: FaExclamationCircle, color: 'text-red-600' },
+  { status: 'paid', label: 'Paid', icon: FaCheckCircle, color: 'text-green-600' },
+];
+
+// where the user lands: what there is, by status, and the latest invoices
 const Dashboard = () => {
-    const user = useSelector(state => state.auth);
-    console.log('userData dashboard', user);
+  const user = useSelector((state) => state.auth.user);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
 
-    // Dummy data (Replace with backend data)
-    const freeInvoicesSent = 6; 
-    const totalInvoices = 120; 
-    const totalMoneyEarned = 2500; 
-    const maxFreeInvoices = 10; 
-    const maxTotalInvoices = 500; 
-    const maxEarnings = 5000; 
+  useEffect(() => {
+    let cancelled = false;
 
-    
-    const progressFreeInvoices = (freeInvoicesSent / maxFreeInvoices) * 100;
-    const progressInvoices = (totalInvoices / maxTotalInvoices) * 100;
-    const progressEarnings = (totalMoneyEarned / maxEarnings) * 100;
+    Promise.all([
+      getBusiness(),
+      listInvoices(),
+      ...CARDS.map((card) => listInvoices({ status: card.status })),
+    ])
+      .then(([business, recent, ...byStatus]) => {
+        if (cancelled) return;
+        setData({
+          business,
+          recent: recent.invoices.slice(0, 5),
+          total: recent.total,
+          counts: Object.fromEntries(CARDS.map((card, index) => [card.status, byStatus[index].total])),
+        });
+      })
+      .catch((failure) => { if (!cancelled) setError(errorMessage(failure)); });
 
-    return (
-        <div style={{ backgroundColor: '#f4f6f9', minHeight: '100vh' }}>
-            <Navbar activePage="Dashboard" />
-            <Container style={{ marginTop: '30px' }}>
-                <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
-                        <Paper style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-                            <Avatar src={user?.profilePic} style={{ width: '100px', height: '100px', margin: '0 auto', border: '4px solid #3f51b5' }} />
-                            <Typography variant="h6" align="center" style={{ marginTop: '10px', fontWeight: 'bold' }}>
-                                {user?.name}
-                            </Typography>
-                            <Typography variant="body1" align="center" style={{ color: '#666' }}>
-                                {user?.email}
-                            </Typography>
-                        </Paper>
-                    </Grid>
+    return () => { cancelled = true; };
+  }, []);
 
-                    <Grid item xs={12} md={8}>
-                        <Paper style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-                            <Typography variant="h5" style={{ fontWeight: 'bold' }}>Welcome back, {user?.name}!</Typography>
-                            <Typography variant="body1" style={{ marginTop: '10px', color: '#444' }}>
-                                Here's an overview of your performance. Keep up the great work!
-                            </Typography>
-                        </Paper>
-                    </Grid>
-                </Grid>
-
-               
-                <Grid container spacing={3} style={{ marginTop: '30px' }}>
-                    <Grid item xs={12} md={4}>
-                        <Card style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-                            <CardHeader
-                                title="Free Invoices Sent"
-                                subheader={`Sent ${freeInvoicesSent} of ${maxFreeInvoices}`}
-                                avatar={<FaFileInvoice size={40} color="#3f51b5" />}
-                            />
-                            <LinearProgress variant="determinate" value={progressFreeInvoices} style={{ marginTop: '20px' }} />
-                            <Typography variant="body1" align="center" style={{ marginTop: '10px' }}>
-                                Progress: {Math.round(progressFreeInvoices)}%
-                            </Typography>
-                        </Card>
-                        
-                        <Card style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px', marginTop: '30px' }}>
-                            <CardHeader
-                                title="Recent Activities"
-                                subheader="Here's what has been happening recently"
-                                avatar={<FaStar size={40} color="#3f51b5" />}
-                            />
-                            <CardContent>
-                                <Typography variant="body1">
-                                    <strong>Invoice #12345</strong> was successfully sent on 15th December, 2024.
-                                </Typography>
-                                <Typography variant="body1" style={{ marginTop: '10px' }}>
-                                    <strong>Invoice #12346</strong> is pending review.
-                                </Typography>
-                               
-                            </CardContent>
-                        </Card>
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                        <Card style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-                            <CardHeader
-                                title="Total Invoices Done"
-                                subheader={`${totalInvoices} invoices completed`}
-                                avatar={<FaClipboardList size={40} color="#3f51b5" />}
-                            />
-                            <Box display="flex" justifyContent="center" alignItems="center" style={{ marginTop: '20px' }}>
-                                <CircularProgressbar
-                                    value={progressInvoices}
-                                    maxValue={100}
-                                    text={`${Math.round(progressInvoices)}%`}
-                                    styles={buildStyles({
-                                        pathColor: '#FF5F00',
-                                        textColor: '#3f51b5',
-                                        trailColor: '#f3f4f6',
-                                        strokeLinecap: 'round',
-                                        pathTransitionDuration: 0.5,
-                                    })}
-                                />
-                            </Box>
-                        </Card>
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                        <Card style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-                            <CardHeader
-                                title="Total Money Earned"
-                                subheader={`Earned $${totalMoneyEarned}`}
-                                avatar={<FaMoneyBillAlt size={40} color="#3f51b5" />}
-                            />
-                            <Box display="flex" justifyContent="center" alignItems="center" style={{ marginTop: '20px' }}>
-                                <CircularProgressbar
-                                    value={progressEarnings}
-                                    maxValue={100}
-                                    text={`${Math.round(progressEarnings)}%`}
-                                    styles={buildStyles({
-                                        pathColor: '#FFD700',
-                                        textColor: '#3f51b5',
-                                        trailColor: '#f3f4f6',
-                                        strokeLinecap: 'round',
-                                        pathTransitionDuration: 0.5,
-                                    })}
-                                />
-                            </Box>
-                        </Card>
-                    </Grid>
-                </Grid>
-            </Container>
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Welcome back, {user.name}</h1>
+          <p className="text-gray-600">Here is where your invoices stand.</p>
         </div>
-    );
+        <Link to="/invoices/new" className="btn-primary">New invoice</Link>
+      </div>
+
+      {error && <p role="alert" className="text-red-600">{error}</p>}
+      {!error && !data && <p className="text-gray-500" role="status">Loading…</p>}
+
+      {data && !data.business.complete && (
+        <div className="card p-5 border-blue-200 bg-blue-50">
+          <h2 className="font-semibold text-gray-800">Start with your business profile</h2>
+          <p className="text-sm text-gray-600 mt-1">Your company name and details appear on every invoice. Fill them in once.</p>
+          <Link to="/settings" className="btn-primary mt-3">Open settings</Link>
+        </div>
+      )}
+
+      {data && (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {CARDS.map(({ status, label, icon: Icon, color }) => (
+              <Link key={status} to={`/invoices?status=${status}`} className="card p-4 hover:shadow-md transition">
+                <Icon className={`text-2xl ${color}`} aria-hidden="true" />
+                <p className="text-3xl font-bold text-gray-800 mt-2">{data.counts[status]}</p>
+                <p className="text-sm text-gray-600">{label}</p>
+              </Link>
+            ))}
+          </div>
+
+          <section className="card">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+              <h2 className="font-semibold text-gray-800">Latest invoices</h2>
+              {data.total > 0 && <Link to="/invoices" className="text-sm text-blue-600 hover:underline">See all {data.total}</Link>}
+            </div>
+
+            {data.recent.length === 0 ? (
+              <p className="px-5 py-8 text-center text-gray-500">No invoices yet. Create your first one.</p>
+            ) : (
+              <ul className="divide-y divide-gray-200">
+                {data.recent.map((invoice) => (
+                  <li key={invoice._id}>
+                    <Link to={`/invoices/${invoice._id}`} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3 hover:bg-gray-50">
+                      <span className="font-semibold text-gray-800 w-24">{invoice.number}</span>
+                      <span className="flex-1 min-w-[8rem] text-gray-700 break-words">{invoice.customer.name}</span>
+                      <span className="text-sm text-gray-500">{dayLabel(invoice.issueDate)}</span>
+                      <span className="font-medium text-gray-800 w-32 text-right">{money(invoice.total, invoice.currency)}</span>
+                      <StatusBadge invoice={invoice} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
+    </div>
+  );
 };
 
 export default Dashboard;

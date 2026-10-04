@@ -1,44 +1,56 @@
-import axios from 'axios';
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import AuthCard from '../components/AuthCard';
+import { forgotPassword } from '../api/authApi';
+import { errorMessage } from '../api/client';
 
 const ForgotPassword = () => {
-    const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState('');
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        // Handle forgot password logic here
-        console.log('Email:', email);
-        try {
-            const response = await axios.post(
-                 `${import.meta.env.VITE_BASE_URL}/api/v1/user/forgot-password`, 
-                 { email }
-                );
+  const submit = async (event) => {
+    event.preventDefault();
+    setError('');
 
-            alert(response.data.message)
-        } catch (error) {
-            alert(error.response.data.message || error.message)
-        }
-    };
-    
+    if (!email.trim()) {
+      setError('Email is required');
+      return;
+    }
 
-    return (
-        <div className="forgot-password-container">
-            <h2>Forgot Password</h2>
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label htmlFor="email">Email</label>
-                    <input
-                        type="email"
-                        id="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                </div>
-                <button type="submit">Submit</button>
-            </form>
-        </div>
-    );
+    setBusy(true);
+    try {
+      const res = await forgotPassword(email);
+      setDone(res.message);
+    } catch (failure) {
+      setError(errorMessage(failure));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <AuthCard title="Forgot your password?">
+      {done ? (
+        <p className="text-center text-gray-700" role="status">{done}. The link is valid for 10 minutes.</p>
+      ) : (
+        <form onSubmit={submit} noValidate className="space-y-4">
+          <p className="text-sm text-gray-600">Enter the address of your account and we will send you a link to set a new password.</p>
+          <div>
+            <label htmlFor="email" className="label">Email address</label>
+            <input id="email" type="email" autoComplete="email" className="field" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+
+          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+
+          <button type="submit" disabled={busy} className="btn-primary w-full">{busy ? 'Sending…' : 'Send the link'}</button>
+        </form>
+      )}
+
+      <p className="text-center text-sm mt-6"><Link to="/login" className="text-blue-600 hover:underline">Back to login</Link></p>
+    </AuthCard>
+  );
 };
 
 export default ForgotPassword;

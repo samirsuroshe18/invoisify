@@ -59,10 +59,15 @@ const DEMO_ID = new mongoose.Types.ObjectId(crypto.createHash('md5').update(DEMO
 const snapshot = ({ companyName, email, phone, address, accentColor, paymentDetails }) =>
     ({ companyName, email, phone, address, logoUrl: '', accentColor, paymentDetails });
 
+const MINUTE_MS = 60 * 1000;
+
 const buildInvoice = (plan, index, day) => {
     const issueDate = addDays(day, plan.issued);
     const paid = plan.paidAfter !== undefined;
-    const issuedAt = new Date(`${issueDate}T09:00:00Z`);
+    // The morning of the issue date, but never later than now: an invoice a visitor makes
+    // next must come after every invoice of the demo in the list.
+    const morning = new Date(`${issueDate}T09:00:00Z`).getTime();
+    const issuedAt = new Date(Math.min(morning, Date.now() - (INVOICES.length - index) * MINUTE_MS));
 
     return {
         user: DEMO_ID,

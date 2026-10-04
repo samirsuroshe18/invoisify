@@ -1,24 +1,25 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+// status: "checking" until the server has said who is logged in, then "in" or "out"
 const initialState = {
-    status: false,
-    userData : null,
+    status: "checking",
+    user: null,
 };
 
 const authSlice = createSlice({
     name: "auth",
     initialState,
     reducers: {
-        login: (state, action) => {
-            state.status = true;
-            state.userData = action.payload;
+        loggedIn: (state, action) => {
+            state.status = "in";
+            state.user = action.payload;
         },
-        logout: (state) => {
-            state.status = false;
-            state.userData = null;
+        loggedOut: (state) => {
+            state.status = "out";
+            state.user = null;
         },
     },
 });
 
-export const { login, logout } = authSlice.actions;
+export const { loggedIn, loggedOut } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,142 +1,90 @@
-import React, { useState } from 'react';
-import { Button, Form, Card } from 'react-bootstrap';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import { useDispatch } from 'react-redux';
-import {login} from "../redux/slices/authSlice.js";
-import { useAlert } from '../hooks/useAlert';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import AuthCard from '../components/AuthCard';
+import { register } from '../api/authApi';
+import { errorMessage } from '../api/client';
+
+const MIN_PASSWORD = 8;
 
 const Register = () => {
-    const navigate = useNavigate();
-    const [email, setEmail] = useState();
-    const [password, setPassword] = useState()
-    const [confirmPassword, setConfirmPassword] = useState();
-    const [name ,setName] = useState();
-    const [AlertComponent, showAlert] = useAlert();
-    const dispatch = useDispatch();
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState('');
 
-    const registerUser = async (e)=>{
-        e.preventDefault();
+  const change = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 
-        if(password !== confirmPassword){
-            showAlert('Passwords do not match', 'warning');
-            return;
-        }
-        if(!email || !name || !password){
-            showAlert('Please fill all the fields', 'error');
-            return;
-        }
+  const submit = async (event) => {
+    event.preventDefault();
+    setError('');
 
-        try {
-            const response = await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/api/v1/user/register`,
-                {
-                    name: name,
-                    email: email,
-                    password: password
-                },
-                {
-                    withCredentials: true
-                }
-            );
-            showAlert(response.data.message, 'success');
-            navigate("/login");
-            dispatch(login(response.data.data));
-        } catch (error) {
-            showAlert(error.response?.data.message || error.message, 'error');
-        }
-    };
+    if (!form.name.trim() || !form.email.trim() || !form.password) {
+      setError('Name, email and password are required');
+      return;
+    }
 
-    const googleLogin = async (token) => {
+    if (form.password.length < MIN_PASSWORD) {
+      setError(`Password must be at least ${MIN_PASSWORD} characters`);
+      return;
+    }
 
-        try {
-            const response = await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/api/v1/oauth/google-login`,
-                {
-                    name: token.name,
-                    email: token.email,
-                    profilePic: token.picture,
-                },
-                {
-                    withCredentials: true,
-                }
-            );
-            showAlert(response.data.message,'warning');
-            dispatch(login(response.data.data));
-            navigate("/dashboard");
-        } catch (error) {
-            showAlert(error.response?.data.message || error.message,'error');
-        }
-    };
+    if (form.password !== form.confirm) {
+      setError('The two passwords are not the same');
+      return;
+    }
 
-    const handleSuccess = (response) => {
-        const token = response.credential;
-        const decoded = jwtDecode(token);
-        googleLogin(decoded);
-    };
+    setBusy(true);
+    try {
+      const res = await register({ name: form.name, email: form.email, password: form.password });
+      setDone(res.message);
+    } catch (failure) {
+      setError(errorMessage(failure));
+    } finally {
+      setBusy(false);
+    }
+  };
 
-    const handleError = (error) => {
-        showAlert('Google Login Error:'|| error.message,'error');
-    };
-
+  if (done) {
     return (
-        <div className='bg-gray-900'>
-            <AlertComponent />
-            <div className="d-flex justify-content-center bg-gray-800 align-items-center min-vh-100 bg-light gap-2">
-                <Card style={{ width: '400px' }} className="p-4 shadow-lg py-4">
-                    <h3 className="text-center mb-4">Create an Account</h3>
-
-                    <Form onSubmit={registerUser}>
-                        <Form.Group controlId="formBasicEmail">
-                            <Form.Label>Email address</Form.Label>
-                            <Form.Control type="email" onChange={(e)=>setEmail(e.target.value)} placeholder="Enter email"  />
-                        </Form.Group>
-
-                        
-                        <Form.Group controlId="formBasicName">
-                            <Form.Label>Name</Form.Label>
-                            <Form.Control type="text" onChange={(e)=>setName(e.target.value)} placeholder="Enter Name"  />
-                        </Form.Group>
-
-                        <Form.Group controlId="formBasicPassword">
-                            <Form.Label>Password</Form.Label>
-                            <Form.Control type="password" placeholder="Password" 
-                            onChange={(e)=>setPassword(e.target.value)}
-                            />
-                        </Form.Group>
-
-                        <Form.Group controlId="formConfirmPassword">
-                            <Form.Label>Confirm Password</Form.Label>
-                            <Form.Control type="password" placeholder="Re-enter your password"  onChange={(e)=>setConfirmPassword(e.target.value)} />
-                        </Form.Group>
-
-                        <Button variant="primary" type="submit" className="w-100 mt-3">
-                            Register Account
-                        </Button>
-                    </Form>
-
-                    <div className="text-center mt-4">
-                        <span>or</span>
-                    </div>
-
-                    <div className="d-flex justify-content-center mt-4">
-                        <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
-                            <GoogleLogin
-                                onSuccess={handleSuccess}
-                                onError={handleError} />
-                        </GoogleOAuthProvider>
-                    </div>
-
-                    <div className="text-center mt-3">
-                        <span>Already have an Account? <Link to="/login">Login</Link></span>
-                    </div>
-                </Card>
-            </div>
-        </div>
+      <AuthCard title="Check your email">
+        <p className="text-center text-gray-700" role="status">{done}</p>
+        <p className="text-center text-sm text-gray-600 mt-3">The link is valid for 10 minutes. You can log in before you have used it.</p>
+        <Link to="/login" className="btn-primary w-full mt-6">Go to login</Link>
+      </AuthCard>
     );
+  }
+
+  return (
+    <AuthCard title="Create an account">
+      <form onSubmit={submit} noValidate className="space-y-4">
+        <div>
+          <label htmlFor="name" className="label">Name</label>
+          <input id="name" name="name" type="text" autoComplete="name" maxLength={80} className="field" value={form.name} onChange={change} />
+        </div>
+        <div>
+          <label htmlFor="email" className="label">Email address</label>
+          <input id="email" name="email" type="email" autoComplete="email" className="field" value={form.email} onChange={change} />
+        </div>
+        <div>
+          <label htmlFor="password" className="label">Password</label>
+          <input id="password" name="password" type="password" autoComplete="new-password" className="field" value={form.password} onChange={change} />
+          <p className="text-xs text-gray-500 mt-1">At least {MIN_PASSWORD} characters.</p>
+        </div>
+        <div>
+          <label htmlFor="confirm" className="label">Password again</label>
+          <input id="confirm" name="confirm" type="password" autoComplete="new-password" className="field" value={form.confirm} onChange={change} />
+        </div>
+
+        {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+
+        <button type="submit" disabled={busy} className="btn-primary w-full">{busy ? 'Creating…' : 'Create account'}</button>
+      </form>
+
+      <p className="text-center text-sm mt-6 text-gray-600">
+        Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login</Link>
+      </p>
+    </AuthCard>
+  );
 };
 
 export default Register;

@@ -63,6 +63,8 @@ test('the demo can be entered, and its next invoice is number 13', async () => {
     expect(list.total).toBe(12);
     expect(list.invoices[0].number).toBe('INV-0012');
     expect(created.body.data.invoice.number).toBe('INV-0013');
+    // what a visitor makes is the newest in the list, whatever the time of day
+    expect((await agent.get('/api/v1/invoices')).body.data.invoices.slice(0, 2).map((invoice) => invoice.number)).toEqual(['INV-0013', 'INV-0012']);
     expect((await request(app).post('/api/v1/users/login').send({ email: DEMO_EMAIL, password: DEMO_PASSWORD })).status).toBe(200);
 });
 

@@ -8,6 +8,7 @@ import { Business } from './models/business.model.js';
 import { Invoice } from './models/invoice.model.js';
 import { Counter } from './models/counter.model.js';
 import { Usage } from './models/usage.model.js';
+import { Review } from './models/review.model.js';
 
 const PORT = process.env.PORT || 3004;
 
@@ -20,7 +21,7 @@ if (!process.env.ACCESS_TOKEN_SECRET) {
 connectDB().then(async () => {
     // invoice numbers and accounts rely on unique indexes: they are in place before
     // the first request
-    await Promise.all([User.init(), Business.init(), Invoice.init(), Counter.init(), Usage.init()]);
+    await Promise.all([User.init(), Business.init(), Invoice.init(), Counter.init(), Usage.init(), Review.init()]);
 
     // visitors change the demo account while trying things out; a fresh start puts it back
     if (process.env.SEED_ON_START === 'true') {

@@ -239,5 +239,6 @@ docs/
 
 Built by team Tech Forge: Samir Suroshe
 ([@samirsuroshe18](https://github.com/samirsuroshe18)), Tanishq Kulkarni
-([@TanishqMSD](https://github.com/TanishqMSD)) and Mohit Dhangar
-([@mohit45v](https://github.com/mohit45v)).
+([@tanishqbuilds](https://github.com/tanishqbuilds)), Mohit Dhangar
+([@mohit45v](https://github.com/mohit45v)) and Pranay Sanap
+([@pranaysanap](https://github.com/pranaysanap)).

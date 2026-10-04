@@ -26,6 +26,13 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || false, credentials: true }));
 app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
 
+// Answers are about one person's invoices, or can change at any moment (a link that was
+// stopped must stop at once), so no browser or host keeps a copy.
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+});
+
 app.get("/api/v1/health", (req, res) => {
     return res.status(200).json(new ApiResponse(200, { status: 'ok' }, "OK"));
 });

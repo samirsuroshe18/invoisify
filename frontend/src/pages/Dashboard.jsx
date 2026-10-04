@@ -127,7 +127,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {COUNTS.map(({ status, label }) => (
               <Link key={status} to={`/invoices?status=${status}`} className="card p-4 hover:shadow-md transition">
-                <p className="text-2xl font-bold text-gray-800">{figures.counts[status]}</p>
+                <p className="text-2xl font-bold text-gray-800">{data.counts[status]}</p>
                 <p className="text-sm text-gray-600">{label}</p>
               </Link>
             ))}
@@ -154,7 +154,7 @@ const Dashboard = () => {
                       <span className="font-semibold text-gray-800 w-24">{invoice.number}</span>
                       <span className="flex-1 min-w-[8rem] text-gray-700 break-words">{invoice.customer.name}</span>
                       <span className="text-sm text-gray-500">{dayLabel(invoice.issueDate)}</span>
-                      <span className="font-medium text-gray-800 w-32 text-right">{money(invoice.total, invoice.currency)}</span>
+                      <span className="font-medium text-gray-800 min-w-[8rem] text-right break-words">{money(invoice.total, invoice.currency)}</span>
                       <StatusBadge invoice={invoice} />
                     </Link>
                   </li>

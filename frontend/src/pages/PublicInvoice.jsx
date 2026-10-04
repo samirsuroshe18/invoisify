@@ -25,7 +25,11 @@ const PublicInvoice = () => {
     setError('');
 
     getPublicInvoice(code)
-      .then((answer) => { if (!cancelled) setInvoice(answer); })
+      .then((answer) => {
+        if (cancelled) return;
+        setInvoice(answer);
+        document.title = `Invoice ${answer.number} from ${answer.business.companyName}`;
+      })
       .catch((failure) => {
         if (cancelled) return;
         setError(httpStatus(failure) === 404
@@ -33,7 +37,10 @@ const PublicInvoice = () => {
           : errorMessage(failure));
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      document.title = 'Invoisify';
+    };
   }, [code]);
 
   const download = async () => {
@@ -62,6 +69,12 @@ const PublicInvoice = () => {
       <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 space-y-5">
         {error && <p role="alert" className="card p-8 text-center text-gray-700">{error}</p>}
         {!error && !invoice && <p className="text-gray-500" role="status">Loading the invoice…</p>}
+
+        {invoice?.demo && (
+          <p role="note" className="bg-amber-50 border border-amber-300 text-amber-900 rounded-lg p-4 text-sm">
+            This is a demo invoice, made with Invoisify&apos;s public demo account, which anyone can use. It is not a real request for payment.
+          </p>
+        )}
 
         {invoice && (
           <>

@@ -16,7 +16,7 @@ const InvoiceDocument = forwardRef(({ invoice }, ref) => {
     <div ref={ref} className="bg-white text-gray-900 p-5 sm:p-8 rounded-lg border border-gray-200 text-sm">
       <header className="flex flex-wrap items-start justify-between gap-4 pb-4 border-b-4" style={{ borderColor: accent }}>
         <div className="min-w-0">
-          {business.logoUrl && <img src={business.logoUrl} alt="" crossOrigin="anonymous" className="h-14 max-w-[10rem] object-contain mb-2" />}
+          {business.logoUrl && <img src={business.logoUrl} alt="" crossOrigin="anonymous" referrerPolicy="no-referrer" className="h-14 max-w-[10rem] object-contain mb-2" />}
           <h2 className="text-xl font-bold break-words">{business.companyName || 'Your company'}</h2>
           {business.address && <p className="text-gray-600 whitespace-pre-line break-words">{business.address}</p>}
           <p className="text-gray-600 break-words">{[business.email, business.phone].filter(Boolean).join(' • ')}</p>

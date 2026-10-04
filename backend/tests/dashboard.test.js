@@ -37,7 +37,8 @@ test('an account without invoices gets zeros in its default currency, and six mo
 
     expect(data.defaultCurrency).toBe('USD');
     expect(data.currencies).toEqual(['USD']);
-    expect(data.figures.USD).toMatchObject({ invoiced: 0, paid: 0, outstanding: 0, overdue: 0, counts: { draft: 0, sent: 0, overdue: 0, paid: 0 } });
+    expect(data.figures.USD).toMatchObject({ invoiced: 0, paid: 0, outstanding: 0, overdue: 0 });
+    expect(data.counts).toEqual({ draft: 0, sent: 0, overdue: 0, paid: 0 });
     expect(data.figures.USD.byMonth).toHaveLength(6);
     expect(data.figures.USD.byMonth.map((row) => row.month)).toEqual([5, 4, 3, 2, 1, 0].map((count) => monthOf(monthsAgo(count))));
     expect(data.figures.USD.byMonth.every((row) => row.invoiced === 0 && row.paid === 0)).toBe(true);
@@ -54,13 +55,11 @@ test('amounts and counts by status; drafts are counted and never added up', asyn
     await invoiceOf(user, { status: 'paid', total: 300.3, paidDate: today() });
     await invoiceOf(user, { status: 'paid', total: 0.4, paidDate: today(), issueDate: addDays(today(), -40), dueDate: addDays(today(), -20) });
 
-    const figures = (await agent.get(api)).body.data.figures.INR;
+    const { data } = (await agent.get(api)).body;
 
     // sent: 1000.10 + 200.20 + 50 + 70 = 1320.30; paid: 300.30 + 0.40 = 300.70
-    expect(figures).toMatchObject({
-        invoiced: 1621, paid: 300.7, outstanding: 1320.3, overdue: 50,
-        counts: { draft: 1, sent: 3, overdue: 1, paid: 2 },
-    });
+    expect(data.figures.INR).toMatchObject({ invoiced: 1621, paid: 300.7, outstanding: 1320.3, overdue: 50 });
+    expect(data.counts).toEqual({ draft: 1, sent: 3, overdue: 1, paid: 2 });
 });
 
 test('currencies are never added together; the default comes first', async () => {
@@ -125,7 +124,7 @@ test('the five latest invoices, and only the user\'s own', async () => {
     expect(data.recent[0]).toEqual(expect.objectContaining({ number: expect.stringMatching(/^INV-/), customer: { name: expect.any(String) }, total: 100, status: 'sent', overdue: false }));
     expect(data.recent.map((row) => row.number)).toEqual([...data.recent.map((row) => row.number)].sort().reverse());
     expect(data.figures.INR.paid).toBe(0);
-    expect(data.figures.INR.counts).toMatchObject({ sent: 7, paid: 0 });
+    expect(data.counts).toMatchObject({ sent: 7, paid: 0 });
 });
 
 test('the demo account has something in every figure', async () => {
@@ -136,7 +135,7 @@ test('the demo account has something in every figure', async () => {
     const { data } = (await agent.get(api)).body;
     const figures = data.figures.INR;
 
-    expect(figures.counts).toEqual({ draft: 2, sent: 2, overdue: 1, paid: 7 });
+    expect(data.counts).toEqual({ draft: 2, sent: 2, overdue: 1, paid: 7 });
     expect(figures.paid).toBeGreaterThan(0);
     expect(figures.overdue).toBeGreaterThan(0);
     expect(figures.outstanding).toBeGreaterThan(figures.overdue);

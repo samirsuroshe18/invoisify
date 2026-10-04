@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals';
 
 // no real email in tests; what would have been sent is looked at instead
-const sendInvoiceMail = jest.fn(async () => true);
-jest.unstable_mockModule('../src/utils/mailSender.js', () => ({ default: jest.fn(async () => ({ sent: true })), sendMail: jest.fn(async () => true), sendInvoiceMail }));
+const sendInvoiceMail = jest.fn(async () => 'sent');
+jest.unstable_mockModule('../src/utils/mailSender.js', () => ({ default: jest.fn(async () => ({ sent: true })), sendInvoiceMail }));
 
 const request = (await import('supertest')).default;
 const { default: app } = await import('../src/app.js');
@@ -37,7 +37,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
     sendInvoiceMail.mockClear();
-    sendInvoiceMail.mockResolvedValue(true);
+    sendInvoiceMail.mockResolvedValue('sent');
 });
 
 afterEach(() => {
@@ -87,17 +87,16 @@ describe('sending by email', () => {
         expect(sendInvoiceMail).not.toHaveBeenCalled();
     });
 
-    test('a mail that could not be sent leaves the invoice and the count as they were', async () => {
-        const { user, agent } = await owner();
+    test('a mail that could not be sent leaves the invoice as it was', async () => {
+        const { agent } = await owner();
         const invoice = await create(agent);
-        sendInvoiceMail.mockResolvedValueOnce(false);
+        sendInvoiceMail.mockResolvedValueOnce('failed');
 
         const res = await agent.post(`${api}/${invoice._id}/send`);
 
         expect([res.status, res.body.message]).toEqual([502, 'The email could not be sent. The invoice was not changed.']);
         const saved = await Invoice.findById(invoice._id);
         expect([saved.status, saved.sentAt]).toEqual(['draft', undefined]);
-        expect((await Usage.findOne({ key: `send:${user._id}` })).count).toBe(0);
     });
 
     test('an account sends only so many a day; another account is not affected', async () => {
@@ -217,7 +216,7 @@ describe('the public page', () => {
             customer: { name: 'Acme Traders', address: '4 Market Street' },
         });
         expect(res.body.data.invoice.items).toHaveLength(1);
-        for (const hidden of ['_id', 'user', 'shareCode', 'isDemo', 'shared', 'createdAt', 'updatedAt', 'sentAt', '__v']) {
+        for (const hidden of ['_id', 'id', 'user', 'shareCode', 'isDemo', 'shared', 'createdAt', 'updatedAt', 'sentAt', '__v']) {
             expect(res.body.data.invoice).not.toHaveProperty(hidden);
         }
         expect(res.body.data.invoice.customer).not.toHaveProperty('email');

@@ -20,10 +20,22 @@ const codeFor = async (invoice) => {
 
     await Invoice.updateOne({ _id: invoice._id, shareCode: { $exists: false } }, { $set: { shareCode: newCode() } });
 
-    return (await Invoice.findById(invoice._id)).shareCode;
+    const current = await Invoice.findById(invoice._id);
+
+    // it was deleted meanwhile
+    if (!current?.shareCode) {
+        throw new ApiError(409, CHANGED);
+    }
+
+    return current.shareCode;
 };
 
-const linkTo = (code) => `${process.env.FRONTEND_URL}/i/${code}`;
+// the address of the web app, without a slash at its end
+const webApp = () => (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
+
+const linkTo = (code) => `${webApp()}/i/${code}`;
+
+const CHANGED = "The invoice was changed in the meantime. Open it again.";
 
 // what anyone with the link sees: the invoice as it is on paper, and nothing about the account
 const presentPublic = (invoice) => {
@@ -35,6 +47,8 @@ const presentPublic = (invoice) => {
         // the customer's email address is the customer's own business
         customer: { name: customer.name, address: customer.address },
         overdue: isOverdue(invoice),
+        // the demo account is open to everyone: the page says that this is not a real invoice
+        demo: Boolean(invoice.isDemo),
     };
 };
 
@@ -78,7 +92,7 @@ const sendInvoice = asyncHandler(async (req, res) => {
             throw new ApiError(429, `You have sent today's ${sendsAllowed()} invoices by email. Try again tomorrow.`);
         }
 
-        const accepted = await sendInvoiceMail({
+        const outcome = await sendInvoiceMail({
             to: invoice.customer.email,
             from: invoice.business.companyName,
             replyTo: invoice.business.email,
@@ -90,9 +104,15 @@ const sendInvoice = asyncHandler(async (req, res) => {
             link: linkTo(await codeFor(invoice)),
         });
 
-        if (!accepted) {
-            // a mail that did not go is not counted, and the invoice stays as it was
+        if (outcome === 'limit') {
+            // not the sender's doing, so it does not count against them
             await giveBack(key);
+            throw new ApiError(429, "Invoisify has sent all the invoice emails it can today. Try again tomorrow, or copy the link and send it yourself.");
+        }
+
+        // The invoice stays as it was. The attempt still counts for the account:
+        // otherwise sends that fail could be repeated without end.
+        if (outcome !== 'sent') {
             throw new ApiError(502, "The email could not be sent. The invoice was not changed.");
         }
     }
@@ -106,8 +126,14 @@ const sendInvoice = asyncHandler(async (req, res) => {
         ? `Invoice ${invoice.number} marked as sent. The demo account sends no email.`
         : `Invoice ${invoice.number} sent to ${invoice.customer.email}`;
 
+    const current = await Invoice.findById(invoice._id);
+
+    if (!current) {
+        throw new ApiError(409, CHANGED);
+    }
+
     return res.status(200).json(
-        new ApiResponse(200, { invoice: present(await Invoice.findById(invoice._id)), code, link: linkTo(code) }, message)
+        new ApiResponse(200, { invoice: present(current), code, link: linkTo(code) }, message)
     );
 });
 

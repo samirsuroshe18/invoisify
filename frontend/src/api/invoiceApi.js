@@ -17,8 +17,8 @@ export const changeStatus = async (id, status, paidDate) => unwrap(await api.pat
 // emails the customer a link to the invoice; answers { data: { invoice, code }, message }
 export const sendInvoice = async (id) => unwrap(await api.post(`/invoices/${id}/send`));
 
-// the code of the invoice's public page, made if there is none yet
-export const shareInvoice = async (id) => unwrap(await api.post(`/invoices/${id}/share`)).data.code;
+// the address of the invoice's public page, made if there is none yet: { code, link }
+export const shareInvoice = async (id) => unwrap(await api.post(`/invoices/${id}/share`)).data;
 export const stopSharing = async (id) => unwrap(await api.delete(`/invoices/${id}/share`));
 
 // what anyone with the link sees

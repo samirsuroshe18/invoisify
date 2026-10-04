@@ -36,6 +36,8 @@ design studio with twelve invoices in every state.
 The demo account is open to everyone, so it is fenced in:
 
 - It sends no email: "Send" marks the invoice as sent and gives you its link.
+  The public page of a demo invoice says that it is not a real request for
+  payment.
 - It stores no files, cannot change its password and cannot post a review.
 - It can hold fewer invoices than a real account.
 - With `SEED_ON_START=true` it is rebuilt every time the server starts, which
@@ -87,9 +89,17 @@ npm install
 | `SEED_ON_START` | `true` rebuilds the demo account every time the server starts |
 | `BUSINESS_UTC_OFFSET_MINUTES` | Optional. How far the business day is from UTC, in minutes; `330` (India) by default. "Today" and "overdue" follow it |
 | `DAILY_SEND_LIMIT` | Optional. Invoices one account may email in a day, default `20` |
-| `DAILY_MAIL_LIMIT` | Optional. Mails the whole site may send in a day, default `250` |
+| `DAILY_MAIL_LIMIT`, `DAILY_INVOICE_MAIL_LIMIT` | Optional. Mails the whole site may send in a day, default `250`, and how many of them may be invoices, default `150`: the rest is kept for verification and reset links |
 | `MAX_INVOICES`, `MAX_DEMO_INVOICES` | Optional. Invoices an account may hold, default `2000`; the demo account `200` |
 | `CONNECTION_IP_HEADER` | Optional. A header in which the host reports the caller's address and which a caller cannot set, for example `cf-connecting-ip` on Render |
+
+The request limits have defaults that suit a small site. Each can be changed
+with a setting of its own: `ACCOUNT_RATE_LIMIT`,
+`ACCOUNT_CONNECTION_RATE_LIMIT`, `ACCOUNT_GUESS_RATE_LIMIT`,
+`ACCOUNT_EMAIL_RATE_LIMIT`, `ACCOUNT_MAIL_RATE_LIMIT`, `RESEND_RATE_LIMIT`,
+`WRITE_RATE_LIMIT`, `PUBLIC_RATE_LIMIT` and `PUBLIC_CONNECTION_RATE_LIMIT`.
+`CORS_ORIGIN` names another origin that may call the server from a browser;
+the web app itself needs none.
 
 The web app needs no settings.
 
@@ -136,12 +146,16 @@ store a file.
   answers "not found".
 - The public page of an invoice has a long random address, shows that one
   invoice without the customer's email address, and exists only while the
-  invoice is sent or paid.
+  invoice is sent or paid. Moving an invoice back to draft ends its link for
+  good. The page is not kept by caches and asks search engines not to list
+  it. A page made with the demo account says so.
 - Logins, sign-ups, password resets and verification links are limited per
   visitor, per account and per address the request really came from; wrong
   passwords from one place do not lock the owner out elsewhere.
-- An account can email a limited number of invoices a day, and the whole
-  site a limited number of mails.
+- An account can email a limited number of invoices a day. The whole site
+  sends a limited number of mails a day, and invoices can use only a part of
+  it. The mail says that Invoisify delivers it for the sender and does not
+  check who the sender is.
 - A logo is recognised by its content, not by the type it claims.
 - What a user typed is escaped in the emails the site sends.
 
@@ -167,6 +181,7 @@ cookie.
 
 | Route | Who | Purpose |
 |---|---|---|
+| `GET /health` | everyone | The server is up |
 | `POST /users/register`, `POST /users/login`, `POST /users/demo-login` | everyone | Accounts |
 | `POST /users/forgot-password`, `GET /verify/verify-email`, `GET /verify/reset-password`, `POST /verify/reset-password` | everyone | Verification and password reset |
 | `GET /users/me`, `POST /users/logout`, `POST /users/resend-verification`, `POST /users/change-password` | logged in | The session |

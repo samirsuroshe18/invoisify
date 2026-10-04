@@ -41,7 +41,7 @@ test('what the user typed cannot become markup or a second header in the mail', 
 test('sending counts against the site\'s mail for the day, and says whether it went', async () => {
     process.env.DAILY_MAIL_LIMIT = '1';
 
-    expect(await sendInvoiceMail(details())).toBe(true);
-    expect(await sendInvoiceMail(details())).toBe(false);
+    expect(await sendInvoiceMail(details())).toBe('sent');
+    expect(await sendInvoiceMail(details())).toBe('failed');
     expect((await Usage.findOne({ key: 'mail' })).count).toBe(1);
 });

@@ -24,7 +24,7 @@ describe('reading', () => {
         expect(res.body.data).toMatchObject({ count: 2, average: 4.5 });
         expect(res.body.data.reviews.map((review) => review.name)).toEqual(['Vikram Shah', 'Asha Rao']);
         expect(res.body.data.reviews[0]).toEqual({ name: 'Vikram Shah', rating: 5, comment: good.comment, date: expect.any(String) });
-        expect(JSON.stringify(res.body)).not.toMatch(/@test\.dev|user/);
+        expect(JSON.stringify(res.body)).not.toMatch(/@test\.dev|"user"|_id/);
     });
 
     test('no reviews yet', async () => {
@@ -98,7 +98,7 @@ describe('writing', () => {
 
         const res = await agent.put(mine).send({ rating: 1, comment: 'This is shit.' });
 
-        expect([res.status, res.body.message]).toEqual([400, 'Please keep the review free of offensive language']);
+        expect([res.status, res.body.message]).toEqual([400, 'Please keep the review free of offensive language ("shit")']);
         expect((await agent.put(mine).send({ rating: 2, comment: 'The PDF could be better, but the assessment is fair.' })).status).toBe(200);
     });
 

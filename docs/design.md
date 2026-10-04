@@ -159,9 +159,18 @@ number.
 - A draft becomes `sent` when the email was accepted for delivery. If it was
   not, the user is told and the invoice stays as it was.
 - "Copy link" gives the same link without sending an email.
-- "Stop sharing" makes a new code, so the old link stops working.
-- A user can send 20 emails a day (`DAILY_SEND_LIMIT`). The demo account's
-  sends are simulated: the invoice becomes `sent` and no email goes out.
+- "Stop sharing" ends the link; sharing again makes a new one. Only a sent or
+  paid invoice has a public page, and moving it back to draft ends its link
+  too. The page leaves out the customer's email address, is not kept by
+  caches, asks search engines not to list it, and says so when the invoice
+  was made with the demo account.
+- A user can send 20 emails a day (`DAILY_SEND_LIMIT`); an attempt the mail
+  service refused counts too. Of the mail the whole site may send in a day,
+  at most `DAILY_INVOICE_MAIL_LIMIT` (default 150) are invoices. The demo
+  account's sends are simulated: the invoice becomes `sent` and no email
+  goes out.
+- The mail says that Invoisify delivers it for the sender and does not check
+  who the sender is.
 - Email goes through the Brevo HTTPS API when `BREVO_API_KEY` is set,
   otherwise SMTP.
 
@@ -175,7 +184,7 @@ From the user's own invoices; drafts are not counted in amounts.
 | Paid | Sum of the totals of paid invoices |
 | Outstanding | Sum of the totals of sent invoices |
 | Overdue | The part of outstanding that is overdue |
-| Counts | Number of invoices in each status, overdue counted on its own |
+| Counts | Number of invoices in each status, overdue counted on its own, over all currencies |
 | By month | For each of the last six months: invoiced (by issue date) and paid (by paid date) |
 | Recent | The five latest invoices |
 
@@ -189,7 +198,8 @@ default currency first and lets the user switch.
   500 characters), newest first, with the average.
 - A logged-in, verified user who is not the demo account can post one review,
   and edit or delete it. The name shown is the user's name.
-- Text with offensive words is refused.
+- Text with offensive words is refused, and so is a review under an account
+  name that has one.
 
 ## 9. Pages
 

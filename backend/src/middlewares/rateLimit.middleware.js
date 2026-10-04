@@ -65,10 +65,16 @@ const writeLimiter = limiter(
     { skip: (req) => skippedInTests() || req.method === 'GET' }
 );
 
-// the public page of an invoice: generous for a reader, too slow for guessing codes
-const publicLimiter = [
-    limiter(setting('PUBLIC_CONNECTION_RATE_LIMIT', 1200), (req) => `public-connection:${connectionOf(req)}`),
-    limiter(setting('PUBLIC_RATE_LIMIT', 120), (req) => `public:${visitorOf(req)}`),
+// What is open to everyone: generous for a reader, too slow for guessing the code of
+// an invoice. Through the web app every request arrives from the web app's host, so
+// the limit by connection is a very wide one. Each use gets counts of its own, so the
+// landing page's reviews can never close the invoices' pages.
+const openLimiter = (name) => [
+    limiter(setting('PUBLIC_CONNECTION_RATE_LIMIT', 6000), (req) => `${name}-connection:${connectionOf(req)}`),
+    limiter(setting('PUBLIC_RATE_LIMIT', 120), (req) => `${name}:${visitorOf(req)}`),
 ];
 
-export { loginLimiter, mailLimiter, visitorLimiter, resendLimiter, writeLimiter, publicLimiter }
+const publicLimiter = openLimiter('invoice');
+const reviewsLimiter = openLimiter('reviews');
+
+export { loginLimiter, mailLimiter, visitorLimiter, resendLimiter, writeLimiter, publicLimiter, reviewsLimiter }

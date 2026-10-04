@@ -23,7 +23,8 @@ const invoicesAllowed = (user) => (user.isDemo
     ? Number(process.env.MAX_DEMO_INVOICES) || 200
     : Number(process.env.MAX_INVOICES) || 2000);
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// an address a mail can really be sent to: no spaces, separators or brackets
+const EMAIL_PATTERN = /^[^\s@,;<>()"]+@[^\s@,;<>()"]+\.[^\s@,;<>()"]+$/;
 const LIST_FILTERS = ['all', 'draft', 'sent', 'overdue', 'paid'];
 
 // which status an invoice may move to, and what the user is told
@@ -255,6 +256,8 @@ const changeStatus = asyncHandler(async (req, res) => {
 
     if (status === 'draft') {
         changes.$unset.sentAt = '';
+        // a draft can change, so the link the customer has ends here; sharing again makes a new one
+        changes.$unset.shareCode = '';
     }
 
     // of two changes that arrive together only the first finds the status it expects

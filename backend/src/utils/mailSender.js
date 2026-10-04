@@ -2,7 +2,7 @@
 import { createTransport } from 'nodemailer';
 import crypto from 'crypto';
 import { User } from '../models/user.model.js';
-import { take } from './dailyLimit.js';
+import { giveBack, take } from './dailyLimit.js';
 
 const TOKEN_LIFETIME_MS = 1000 * 60 * 10;
 const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
@@ -71,7 +71,13 @@ const deliver = async (message) => {
     throw new Error("Today's allowance of mail is used up");
   }
 
-  return process.env.BREVO_API_KEY ? sendWithBrevo(message) : sendWithSmtp(message);
+  try {
+    return await (process.env.BREVO_API_KEY ? sendWithBrevo(message) : sendWithSmtp(message));
+  } catch (error) {
+    // a mail that did not go is not counted, or failures alone could use up the day
+    await giveBack(MAIL_KEY).catch(() => {});
+    throw error;
+  }
 };
 
 // emailType is "VERIFY" or "RESET"
@@ -110,9 +116,15 @@ const escapeHtml = (text) => String(text)
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;');
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_PATTERN = /^[^\s@,;<>()"]+@[^\s@,;<>()"]+\.[^\s@,;<>()"]+$/;
+
+const INVOICE_MAIL_KEY = 'invoice-mail';
+// Invoice mail stops well before the day's mail is used up: the rest is kept for
+// verification and password reset links, which nobody can do without.
+const invoiceMailsAllowed = () => Number(process.env.DAILY_INVOICE_MAIL_LIMIT) || 150;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // "2026-03-15" as "15 Mar 2026"
@@ -121,8 +133,12 @@ const dayLabel = (day) => {
   return `${date} ${MONTHS[month - 1]} ${year}`;
 };
 
-// a name on one line, without the characters that mean something in a mail header
-const headerSafe = (value) => String(value || '').replace(/[\r\n<>"]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+// mail programs turn anything that looks like a web address into a link; a name is not one
+const withoutLinks = (value) => String(value || '').replace(/https?:\/\/|www\./gi, '');
+
+// a name on one line, without the characters that mean something in a mail header;
+// cut by whole characters, so no half of a pair is left at the end
+const headerSafe = (value) => [...withoutLinks(value).replace(/[\r\n<>"]/g, ' ').replace(/\s+/g, ' ').trim()].slice(0, 80).join('');
 
 // The mail that tells a customer about an invoice. Everything in it that a user typed
 // is escaped in the text and stripped of line breaks in the headers.
@@ -137,23 +153,29 @@ const invoiceMail = ({ to, from, replyTo, customerName, number, total, currency,
     senderName: `${business} via Invoisify`,
     // answers go to the business, when it gave an address that is one
     replyTo: typeof replyTo === 'string' && EMAIL_PATTERN.test(replyTo) ? replyTo : undefined,
-    html: `<p>Hello ${escapeHtml(customerName)},</p>
+    html: `<p>Hello ${escapeHtml(withoutLinks(customerName))},</p>
 <p>${escapeHtml(business)} has sent you invoice <strong>${escapeHtml(number)}</strong> for <strong>${escapeHtml(amount)}</strong>, due on ${escapeHtml(dayLabel(dueDate))}.</p>
 <p><a href="${escapeHtml(link)}">View the invoice</a>. You can also download it as a PDF there.</p>
 <p>If you have a question about this invoice, reply to this email: your answer goes to ${escapeHtml(business)}.</p>
-<p>Sent with Invoisify</p>`,
+<p>Sent with Invoisify, which delivers this message for the sender and does not check who the sender is. If you do not know ${escapeHtml(business)}, do not pay this invoice.</p>`,
   };
 };
 
-// Sends the invoice mail. Returns whether it was accepted for delivery; a failure
+// Sends the invoice mail. Answers "sent" when it was accepted for delivery, "limit"
+// when the site has sent its invoice mail for the day, and "failed" otherwise. It
 // never throws, so the caller can leave the invoice as it was.
 async function sendInvoiceMail(details) {
+  if (await take(INVOICE_MAIL_KEY, invoiceMailsAllowed()) === null) {
+    return 'limit';
+  }
+
   try {
     await deliver(invoiceMail(details));
-    return true;
+    return 'sent';
   } catch (error) {
     console.log(error.message);
-    return false;
+    await giveBack(INVOICE_MAIL_KEY).catch(() => {});
+    return 'failed';
   }
 }
 

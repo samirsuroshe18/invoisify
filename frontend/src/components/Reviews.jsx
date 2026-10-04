@@ -37,7 +37,7 @@ const ReviewForm = ({ onChanged }) => {
           setComment(review.comment);
         }
       })
-      .catch(() => { if (!cancelled) setExisting(null); });
+      .catch(() => { if (!cancelled) setExisting(false); });
 
     return () => { cancelled = true; };
   }, []);
@@ -83,6 +83,7 @@ const ReviewForm = ({ onChanged }) => {
   };
 
   if (existing === undefined) return null;
+  if (existing === false) return <p className="text-sm text-gray-500">Your review could not be loaded. Reload the page to write or change it.</p>;
 
   return (
     <form onSubmit={save} noValidate className="bg-white p-6 rounded-lg shadow-lg max-w-2xl mx-auto text-left space-y-4">

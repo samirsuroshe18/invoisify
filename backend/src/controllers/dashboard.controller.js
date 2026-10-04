@@ -25,17 +25,17 @@ const emptyFigures = (months) => ({
     paid: 0n,
     outstanding: 0n,
     overdue: 0n,
-    counts: { draft: 0, sent: 0, overdue: 0, paid: 0 },
     byMonth: new Map(months.map((month) => [month, { invoiced: 0n, paid: 0n }])),
 });
 
-// adds one invoice to the figures of its currency
-const count = (figures, invoice, day) => {
+// Adds one invoice to the figures of its currency and to the counts. The counts are
+// of all invoices, whatever their currency, like the list they lead to.
+const count = (figures, counts, invoice, day) => {
     const amount = toHundredths(invoice.total);
 
     if (invoice.status === 'draft') {
         // a draft is not money yet: it is counted and never added up
-        figures.counts.draft += 1;
+        counts.draft += 1;
         return;
     }
 
@@ -44,7 +44,7 @@ const count = (figures, invoice, day) => {
     if (issued) issued.invoiced += amount;
 
     if (invoice.status === 'paid') {
-        figures.counts.paid += 1;
+        counts.paid += 1;
         figures.paid += amount;
         const paid = figures.byMonth.get((invoice.paidDate || '').slice(0, 7));
         if (paid) paid.paid += amount;
@@ -54,10 +54,10 @@ const count = (figures, invoice, day) => {
     figures.outstanding += amount;
 
     if (isOverdue(invoice, day)) {
-        figures.counts.overdue += 1;
+        counts.overdue += 1;
         figures.overdue += amount;
     } else {
-        figures.counts.sent += 1;
+        counts.sent += 1;
     }
 };
 
@@ -66,7 +66,6 @@ const presentFigures = (figures) => ({
     paid: toUnits(figures.paid),
     outstanding: toUnits(figures.outstanding),
     overdue: toUnits(figures.overdue),
-    counts: figures.counts,
     byMonth: [...figures.byMonth.entries()].map(([month, sums]) => ({ month, invoiced: toUnits(sums.invoiced), paid: toUnits(sums.paid) })),
 });
 
@@ -90,15 +89,16 @@ const getDashboard = asyncHandler(async (req, res) => {
 
     const [business, invoices, recent] = await Promise.all([
         getBusinessOf(req.user._id),
-        Invoice.find({ user: req.user._id }).select('status total currency issueDate dueDate paidDate'),
-        Invoice.find({ user: req.user._id }).select('number customer.name issueDate dueDate currency total status').sort({ createdAt: -1, _id: -1 }).limit(RECENT),
+        Invoice.find({ user: req.user._id }).select('status total currency issueDate dueDate paidDate').lean(),
+        Invoice.find({ user: req.user._id }).select('number customer.name issueDate dueDate currency total status').sort({ createdAt: -1, _id: -1 }).limit(RECENT).lean(),
     ]);
 
     const figures = new Map([[business.currency, emptyFigures(months)]]);
+    const counts = { draft: 0, sent: 0, overdue: 0, paid: 0 };
 
     for (const invoice of invoices) {
         if (!figures.has(invoice.currency)) figures.set(invoice.currency, emptyFigures(months));
-        count(figures.get(invoice.currency), invoice, day);
+        count(figures.get(invoice.currency), counts, invoice, day);
     }
 
     // the default currency first, the others in the order of the alphabet
@@ -108,6 +108,7 @@ const getDashboard = asyncHandler(async (req, res) => {
         new ApiResponse(200, {
             defaultCurrency: business.currency,
             currencies,
+            counts,
             figures: Object.fromEntries(currencies.map((currency) => [currency, presentFigures(figures.get(currency))])),
             recent: recent.map((invoice) => presentRow(invoice, day)),
         }, "Dashboard")

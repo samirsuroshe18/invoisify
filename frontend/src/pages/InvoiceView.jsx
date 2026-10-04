@@ -9,8 +9,6 @@ import useToast from '../lib/useToast';
 import { downloadPdf } from '../lib/pdf';
 import { localToday } from '../lib/format';
 
-const linkOf = (code) => `${window.location.origin}/i/${code}`;
-
 // One invoice: how it looks, where it stands and what can be done with it
 const InvoiceView = () => {
   const { id } = useParams();
@@ -61,6 +59,9 @@ const InvoiceView = () => {
   };
 
   const move = async (status, date) => {
+    // the customer's link ends when an invoice goes back to draft
+    if (status === 'draft' && invoice.shared && !window.confirm('Move this invoice back to draft? The link your customer has will stop working.')) return;
+
     const res = await run(status, () => changeStatus(id, status, date));
     if (res) {
       setInvoice(res.data.invoice);
@@ -80,20 +81,23 @@ const InvoiceView = () => {
 
   const send = async () => {
     const again = invoice.status === 'sent' ? ' again' : '';
-    if (!window.confirm(`Email invoice ${invoice.number}${again} to ${invoice.customer.email}?`)) return;
+    const question = user.isDemo
+      ? `Mark invoice ${invoice.number} as sent? The demo account sends no email; you get the link the customer would receive.`
+      : `Email invoice ${invoice.number}${again} to ${invoice.customer.email}?`;
+    if (!window.confirm(question)) return;
 
     const res = await run('send', () => sendInvoice(id));
     if (res) {
       setInvoice(res.data.invoice);
-      setLink(linkOf(res.data.code));
+      setLink(res.data.link);
     }
   };
 
   const copyLink = async () => {
-    const code = await run('share', async () => ({ code: await shareInvoice(id) }));
-    if (!code) return;
+    const shared = await run('share', () => shareInvoice(id));
+    if (!shared) return;
 
-    const address = linkOf(code.code);
+    const address = shared.link;
     setLink(address);
     setInvoice((current) => ({ ...current, shared: true }));
 

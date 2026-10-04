@@ -9,20 +9,17 @@ const userSchema = new Schema({
         trim: true,
     },
 
-    email: { 
+    email: {
         type: String,
         required: true,
         trim: true,
         unique: true,
-        lowercase: true
-    },
-
-    profilePic: {
-        type: String,
+        lowercase: true,
     },
 
     password: {
         type: String,
+        required: true,
     },
 
     isVerified: {
@@ -30,19 +27,20 @@ const userSchema = new Schema({
         default: false,
     },
 
-    isGoogleVerified: {
+    // the shared account visitors can try the app with
+    isDemo: {
         type: Boolean,
         default: false,
     },
 
-    role: {
-        type: String,
-        enum: ['user', 'admin', 'superadmin'],
-        default: 'user'
-    },
-
     refreshToken: {
         type: String
+    },
+
+    // raised on logout and password change; a token carrying an older value is refused
+    tokenVersion: {
+        type: Number,
+        default: 0,
     },
 
     verifyToken: String,
@@ -52,8 +50,7 @@ const userSchema = new Schema({
 
 }, { timestamps: true });
 
-//pre hooks allow us to do any operation before saving the data in database
-//in pre hook the first parameter on which event you have to do the operation like save, validation, etc
+// the password is hashed whenever it changes, never stored as typed
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
 
@@ -61,18 +58,15 @@ userSchema.pre("save", async function (next) {
     next();
 });
 
-//you can create your custom methods as well by using methods object
 userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password);
 }
 
-//jwt is a bearer token it means the person bear this token we give the access to that person its kind of chavi
 userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
-            email: this.email,
-            userName: this.userName,
+            tokenVersion: this.tokenVersion,
         }, process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
@@ -91,5 +85,20 @@ userSchema.methods.generateRefreshToken = function () {
         }
     );
 }
+
+// never send secrets or one-time tokens to a client
+userSchema.set('toJSON', {
+    transform: (_, ret) => {
+        delete ret.password;
+        delete ret.refreshToken;
+        delete ret.tokenVersion;
+        delete ret.verifyToken;
+        delete ret.verifyTokenExpiry;
+        delete ret.forgotPasswordToken;
+        delete ret.forgotPasswordTokenExpiry;
+        delete ret.__v;
+        return ret;
+    }
+});
 
 export const User = mongoose.model("User", userSchema);

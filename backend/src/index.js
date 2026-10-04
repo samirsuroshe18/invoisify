@@ -1,13 +1,14 @@
-import dotenv from "dotenv";
-dotenv.config();
-import connectDB from "./database/database.js";
-import app from "./app.js";
+// must stay first: ES imports are hoisted, and the modules below read process.env
+import 'dotenv/config';
+import connectDB from './database/database.js';
+import app from './app.js';
 
-connectDB().then(() => {
-    app.listen(process.env.PORT || 8001, process.env.SERVER_HOST, () => {
-        console.log(`Server is running at on : http://${process.env.SERVER_HOST}:${process.env.PORT}`);
+const PORT = process.env.PORT || 3004;
+
+connectDB().then(async () => {
+    app.listen(PORT, process.env.SERVER_HOST, () => {
+        console.log(`Server is running on port ${PORT}`);
     })
 }).catch((err) => {
-    console.log('MongoDB Failed !!!', err)
-})
-
+    console.log('MongoDB Failed !!!', err);
+});

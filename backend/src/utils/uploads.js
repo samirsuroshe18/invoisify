@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import ApiError from "./ApiError.js";
 
-const ROOT_FOLDER = 'college-transparency';
+const ROOT_FOLDER = 'invoisify';
 const KEYS = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
 
 // attachments are optional everywhere, so the system also runs without a file store

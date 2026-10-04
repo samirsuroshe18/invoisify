@@ -1,46 +1,76 @@
 import express from "express";
-import cors from "cors";
+import cors from 'cors';
 import cookieParser from "cookie-parser";
-import {fileURLToPath} from "url";
-import { dirname } from "path";
-import path from "path";
-import errorHandler from "./utils/errorHandler.js";
+import ApiError from './utils/ApiError.js';
+import ApiResponse from './utils/ApiResponse.js';
+import userRouter from './routes/user.routes.js';
+import verifyRouter from './routes/verify.routes.js';
+import businessRouter from './routes/business.routes.js';
+import invoiceRouter from './routes/invoice.routes.js';
+import publicRouter from './routes/public.routes.js';
+import dashboardRouter from './routes/dashboard.routes.js';
+import reviewRouter from './routes/review.routes.js';
 
 const app = express();
 
+// the server does not say what it is made with
+app.disable('x-powered-by');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const staticPath = path.join(__dirname, '../public');
+// behind the host's proxy the connection's own address is the proxy; this makes
+// req.ip the address the proxy saw
+app.set('trust proxy', 1);
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, './views'));
-
-app.use(cors({origin: ["http://localhost:5173", process.env.CORS_ORIGIN], credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-app.use(express.static(staticPath));
+// the web app reaches the server through its own address, so other origins are only
+// allowed when one is named
+app.use(cors({ origin: process.env.CORS_ORIGIN || false, credentials: true }));
+app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
 
-//routes import
-import userRouter from "./routes/user.route.js";
-import oauthRouter from "./routes/oauth.routes.js";
-import emailRouter from "./routes/email.routes.js";
-import invoiceRouter from "./routes/invoice.routes.js";
-import templateRouter from "./routes/template.routes.js";
-import reviewRouter from "./routes/review.routes.js";
-import historyRouter from "./routes/history.routes.js";
+// Answers are about one person's invoices, or can change at any moment (a link that was
+// stopped must stop at once), so no browser or host keeps a copy.
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+});
 
-//routes declaration
-app.use("/api/v1/user", userRouter);
-app.use("/api/v1/oauth", oauthRouter);
-app.use("/api/v1/email", emailRouter);
-app.use("/api/v1/invoice", invoiceRouter);
-app.use("/api/v1/template", templateRouter);
-app.use("/api/v1/review", reviewRouter);
-app.use('/api/v1/history', historyRouter); 
-app.use(errorHandler);
+app.get("/api/v1/health", (req, res) => {
+    return res.status(200).json(new ApiResponse(200, { status: 'ok' }, "OK"));
+});
 
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/verify", verifyRouter);
+app.use("/api/v1/business", businessRouter);
+app.use("/api/v1/invoices", invoiceRouter);
+app.use("/api/v1/public", publicRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
+app.use((req, res, next) => {
+    next(new ApiError(404, "Route not found"));
+});
 
-export default app;
+// Custom error handling
+app.use((err, req, res, next) => {
+    // a body that could not be read, or one that is too large, is the sender's mistake
+    const isBodyError = err.type === 'entity.parse.failed' || err.type === 'entity.too.large';
+    const isValidationError = err.name === 'ValidationError';
+    const statusCode = err.statusCode || err.status || (isBodyError || isValidationError ? 400 : 500);
+    // an unexpected failure can carry database or stack details, so only messages
+    // written for the client (ApiError) are sent back
+    const message = err instanceof ApiError
+        ? err.message
+        : (isBodyError ? "The request could not be read" : (statusCode >= 500 ? "Internal server error" : "The request is not valid"));
+
+    if (statusCode >= 500) {
+        console.log(err);
+    }
+
+    return res.status(statusCode).json({
+        statusCode: statusCode,
+        data: null,
+        message: message,
+        success: false
+    });
+})
+
+export default app

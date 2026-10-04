@@ -1,139 +1,171 @@
-import React from 'react';
-import { Typography, Avatar, Container, Grid, Paper, LinearProgress, Box, Card, CardContent, CardHeader } from '@mui/material';
-import { FaFileInvoice, FaMoneyBillAlt, FaClipboardList, FaStar } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
-import 'react-circular-progressbar/dist/styles.css';
-import Navbar from '../components/Navbar';
+import { Bar } from 'react-chartjs-2';
+import { getDashboard } from '../api/invoiceApi';
+import { getBusiness } from '../api/businessApi';
+import { errorMessage } from '../api/client';
+import StatusBadge from '../components/StatusBadge';
+import { dayLabel, money, monthLabel } from '../lib/format';
+import '../lib/charts';
 
+const AMOUNTS = [
+  { key: 'invoiced', label: 'Invoiced', hint: 'sent and paid', color: 'text-gray-800' },
+  { key: 'paid', label: 'Paid', hint: 'received', color: 'text-green-700' },
+  { key: 'outstanding', label: 'Outstanding', hint: 'sent, not yet paid', color: 'text-blue-700' },
+  { key: 'overdue', label: 'Overdue', hint: 'past the due date', color: 'text-red-700' },
+];
+
+const COUNTS = [
+  { status: 'draft', label: 'Drafts' },
+  { status: 'sent', label: 'Sent' },
+  { status: 'overdue', label: 'Overdue' },
+  { status: 'paid', label: 'Paid' },
+];
+
+// what was invoiced and what was paid in each of the last six months
+const MonthChart = ({ byMonth, currency }) => {
+  const data = {
+    labels: byMonth.map((row) => monthLabel(row.month)),
+    datasets: [
+      { label: 'Invoiced', data: byMonth.map((row) => row.invoiced), backgroundColor: '#2563eb' },
+      { label: 'Paid', data: byMonth.map((row) => row.paid), backgroundColor: '#16a34a' },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 14 } },
+      tooltip: { callbacks: { label: (item) => `${item.dataset.label}: ${money(item.raw, currency)}` } },
+    },
+    scales: { y: { beginAtZero: true, ticks: { callback: (value) => Number(value).toLocaleString('en-US', { notation: 'compact' }) } } },
+  };
+
+  return (
+    <div className="h-64 md:h-80">
+      <Bar data={data} options={options} aria-label={`Invoiced and paid by month, in ${currency}`} role="img" />
+    </div>
+  );
+};
+
+// where the user lands: what was invoiced, what came in, what is still open
 const Dashboard = () => {
-    const user = useSelector(state => state.auth);
-    console.log('userData dashboard', user);
+  const user = useSelector((state) => state.auth.user);
+  const [data, setData] = useState(null);
+  const [business, setBusiness] = useState(null);
+  const [currency, setCurrency] = useState('');
+  const [error, setError] = useState('');
 
-    // Dummy data (Replace with backend data)
-    const freeInvoicesSent = 6; 
-    const totalInvoices = 120; 
-    const totalMoneyEarned = 2500; 
-    const maxFreeInvoices = 10; 
-    const maxTotalInvoices = 500; 
-    const maxEarnings = 5000; 
+  useEffect(() => {
+    let cancelled = false;
 
-    
-    const progressFreeInvoices = (freeInvoicesSent / maxFreeInvoices) * 100;
-    const progressInvoices = (totalInvoices / maxTotalInvoices) * 100;
-    const progressEarnings = (totalMoneyEarned / maxEarnings) * 100;
+    Promise.all([getDashboard(), getBusiness()])
+      .then(([dashboard, profile]) => {
+        if (cancelled) return;
+        setData(dashboard);
+        setBusiness(profile);
+        setCurrency(dashboard.defaultCurrency);
+      })
+      .catch((failure) => { if (!cancelled) setError(errorMessage(failure)); });
 
-    return (
-        <div style={{ backgroundColor: '#f4f6f9', minHeight: '100vh' }}>
-            <Navbar activePage="Dashboard" />
-            <Container style={{ marginTop: '30px' }}>
-                <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
-                        <Paper style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-                            <Avatar src={user?.profilePic} style={{ width: '100px', height: '100px', margin: '0 auto', border: '4px solid #3f51b5' }} />
-                            <Typography variant="h6" align="center" style={{ marginTop: '10px', fontWeight: 'bold' }}>
-                                {user?.name}
-                            </Typography>
-                            <Typography variant="body1" align="center" style={{ color: '#666' }}>
-                                {user?.email}
-                            </Typography>
-                        </Paper>
-                    </Grid>
+    return () => { cancelled = true; };
+  }, []);
 
-                    <Grid item xs={12} md={8}>
-                        <Paper style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-                            <Typography variant="h5" style={{ fontWeight: 'bold' }}>Welcome back, {user?.name}!</Typography>
-                            <Typography variant="body1" style={{ marginTop: '10px', color: '#444' }}>
-                                Here's an overview of your performance. Keep up the great work!
-                            </Typography>
-                        </Paper>
-                    </Grid>
-                </Grid>
+  const figures = data?.figures[currency];
 
-               
-                <Grid container spacing={3} style={{ marginTop: '30px' }}>
-                    <Grid item xs={12} md={4}>
-                        <Card style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-                            <CardHeader
-                                title="Free Invoices Sent"
-                                subheader={`Sent ${freeInvoicesSent} of ${maxFreeInvoices}`}
-                                avatar={<FaFileInvoice size={40} color="#3f51b5" />}
-                            />
-                            <LinearProgress variant="determinate" value={progressFreeInvoices} style={{ marginTop: '20px' }} />
-                            <Typography variant="body1" align="center" style={{ marginTop: '10px' }}>
-                                Progress: {Math.round(progressFreeInvoices)}%
-                            </Typography>
-                        </Card>
-                        
-                        <Card style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px', marginTop: '30px' }}>
-                            <CardHeader
-                                title="Recent Activities"
-                                subheader="Here's what has been happening recently"
-                                avatar={<FaStar size={40} color="#3f51b5" />}
-                            />
-                            <CardContent>
-                                <Typography variant="body1">
-                                    <strong>Invoice #12345</strong> was successfully sent on 15th December, 2024.
-                                </Typography>
-                                <Typography variant="body1" style={{ marginTop: '10px' }}>
-                                    <strong>Invoice #12346</strong> is pending review.
-                                </Typography>
-                               
-                            </CardContent>
-                        </Card>
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                        <Card style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-                            <CardHeader
-                                title="Total Invoices Done"
-                                subheader={`${totalInvoices} invoices completed`}
-                                avatar={<FaClipboardList size={40} color="#3f51b5" />}
-                            />
-                            <Box display="flex" justifyContent="center" alignItems="center" style={{ marginTop: '20px' }}>
-                                <CircularProgressbar
-                                    value={progressInvoices}
-                                    maxValue={100}
-                                    text={`${Math.round(progressInvoices)}%`}
-                                    styles={buildStyles({
-                                        pathColor: '#FF5F00',
-                                        textColor: '#3f51b5',
-                                        trailColor: '#f3f4f6',
-                                        strokeLinecap: 'round',
-                                        pathTransitionDuration: 0.5,
-                                    })}
-                                />
-                            </Box>
-                        </Card>
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                        <Card style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px' }}>
-                            <CardHeader
-                                title="Total Money Earned"
-                                subheader={`Earned $${totalMoneyEarned}`}
-                                avatar={<FaMoneyBillAlt size={40} color="#3f51b5" />}
-                            />
-                            <Box display="flex" justifyContent="center" alignItems="center" style={{ marginTop: '20px' }}>
-                                <CircularProgressbar
-                                    value={progressEarnings}
-                                    maxValue={100}
-                                    text={`${Math.round(progressEarnings)}%`}
-                                    styles={buildStyles({
-                                        pathColor: '#FFD700',
-                                        textColor: '#3f51b5',
-                                        trailColor: '#f3f4f6',
-                                        strokeLinecap: 'round',
-                                        pathTransitionDuration: 0.5,
-                                    })}
-                                />
-                            </Box>
-                        </Card>
-                    </Grid>
-                </Grid>
-            </Container>
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 break-words">Welcome back, {user.name}</h1>
+          <p className="text-gray-600">Here is where your invoices stand.</p>
         </div>
-    );
+        <Link to="/invoices/new" className="btn-primary">New invoice</Link>
+      </div>
+
+      {error && <p role="alert" className="text-red-600">{error}</p>}
+      {!error && !data && <p className="text-gray-500" role="status">Loading…</p>}
+
+      {business && !business.complete && (
+        <div className="card p-5 border-blue-200 bg-blue-50">
+          <h2 className="font-semibold text-gray-800">Start with your business profile</h2>
+          <p className="text-sm text-gray-600 mt-1">Your company name and details appear on every invoice. Fill them in once.</p>
+          <Link to="/settings" className="btn-primary mt-3">Open settings</Link>
+        </div>
+      )}
+
+      {figures && (
+        <>
+          {data.currencies.length > 1 && (
+            <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Currency">
+              <span className="text-sm text-gray-600">Amounts in</span>
+              {data.currencies.map((code) => (
+                <button
+                  key={code}
+                  onClick={() => setCurrency(code)}
+                  aria-pressed={currency === code}
+                  className={`px-3 py-1 rounded-full text-sm font-medium border transition ${currency === code ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                >
+                  {code}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {AMOUNTS.map(({ key, label, hint, color }) => (
+              <div key={key} className="card p-4">
+                <p className="text-sm text-gray-600">{label}</p>
+                <p className={`text-xl md:text-2xl font-bold mt-1 break-words ${color}`}>{money(figures[key], currency)}</p>
+                <p className="text-xs text-gray-500">{hint}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {COUNTS.map(({ status, label }) => (
+              <Link key={status} to={`/invoices?status=${status}`} className="card p-4 hover:shadow-md transition">
+                <p className="text-2xl font-bold text-gray-800">{data.counts[status]}</p>
+                <p className="text-sm text-gray-600">{label}</p>
+              </Link>
+            ))}
+          </div>
+
+          <section className="card p-5">
+            <h2 className="font-semibold text-gray-800 mb-3">The last six months</h2>
+            <MonthChart byMonth={figures.byMonth} currency={currency} />
+          </section>
+
+          <section className="card">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+              <h2 className="font-semibold text-gray-800">Latest invoices</h2>
+              {data.recent.length > 0 && <Link to="/invoices" className="text-sm text-blue-600 hover:underline">See all</Link>}
+            </div>
+
+            {data.recent.length === 0 ? (
+              <p className="px-5 py-8 text-center text-gray-500">No invoices yet. Create your first one.</p>
+            ) : (
+              <ul className="divide-y divide-gray-200">
+                {data.recent.map((invoice) => (
+                  <li key={invoice._id}>
+                    <Link to={`/invoices/${invoice._id}`} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3 hover:bg-gray-50">
+                      <span className="font-semibold text-gray-800 w-24">{invoice.number}</span>
+                      <span className="flex-1 min-w-[8rem] text-gray-700 break-words">{invoice.customer.name}</span>
+                      <span className="text-sm text-gray-500">{dayLabel(invoice.issueDate)}</span>
+                      <span className="font-medium text-gray-800 min-w-[8rem] text-right break-words">{money(invoice.total, invoice.currency)}</span>
+                      <StatusBadge invoice={invoice} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
+    </div>
+  );
 };
 
 export default Dashboard;

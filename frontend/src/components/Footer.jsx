@@ -1,35 +1,21 @@
-import React from 'react'
-import { FaGlobeAmericas, FaDiscord, FaInstagram } from "react-icons/fa";
+import { FaGithub } from "react-icons/fa";
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <div>
-        <footer className="bg-gray-800 text-white p-4"> 
-  <nav className="flex items-center justify-center gap-12">
-    <Link className="no-underline text-md hover:underline">About us</Link>
-    <Link className="no-underline text-md hover:underline">Contact</Link>
-    <Link className="no-underline text-md hover:underline">Jobs</Link>
-    <Link className="no-underline text-md hover:underline">Press kit</Link>
-  </nav>
-  <nav>
-    <div className="flex items-center justify-center  gap-12 py-4">
-      <Link>
-        <FaGlobeAmericas className='h-6 w-12 text-white'/>
-      </Link>
-      <Link>
-        <FaInstagram className='h-6 w-12 text-white'/>
-      </Link>
-      <Link>
-        <FaDiscord className='h-6 w-12 text-white'/>
-      </Link>
-    </div>
-  </nav>
-  <aside className='text-center'>
-    <p>Copyright © {new Date().getFullYear()} - All right reserved by Tech Forge</p>
-  </aside>
-</footer>
-    </div>
+    <footer className="bg-gray-800 text-white p-6">
+      <nav className="flex flex-wrap items-center justify-center gap-x-10 gap-y-2 text-sm">
+        <Link to="/" className="hover:underline">Home</Link>
+        <Link to="/login" className="hover:underline">Login</Link>
+        <Link to="/register" className="hover:underline">Sign up</Link>
+        <a href="https://github.com/samirsuroshe18/invoisify" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:underline">
+          <FaGithub className="h-4 w-4" aria-hidden="true" /> GitHub
+        </a>
+      </nav>
+      <p className="text-center text-sm text-gray-300 mt-4">
+        Copyright © {new Date().getFullYear()} Invoisify. Built by team Tech Forge.
+      </p>
+    </footer>
   )
 }
 
